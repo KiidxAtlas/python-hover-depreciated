@@ -1,0 +1,11 @@
+node_modules/
+out/extension_backup.*
+out/extension_new.*
+out/extention.*
+src/extension_backup.ts
+src/extension_new.ts
+src/extention.ts
+*.vsix
+.DS_Store
+*.log
+.vscode/.history

@@ -2,7 +2,7 @@
     "name": "python-hover",
     "displayName": "Python Hover",
     "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -36,6 +36,16 @@
                 "command": "pythonHover.clearCache",
                 "title": "Clear Documentation Cache",
                 "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.refreshContent",
+                "title": "Refresh Current Hover Content",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.showStatistics",
+                "title": "Show Cache Statistics",
+                "category": "Python Hover"
             }
         ],
         "configuration": {
@@ -53,6 +63,28 @@
                     "minimum": 1,
                     "maximum": 365,
                     "description": "Number of days to cache documentation content"
+                },
+                "pythonHover.showExamples": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show practical examples in hover tooltips"
+                },
+                "pythonHover.maxContentLength": {
+                    "type": "number",
+                    "default": 1500,
+                    "minimum": 500,
+                    "maximum": 5000,
+                    "description": "Maximum character length for hover content"
+                },
+                "pythonHover.includeBuiltins": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include built-in functions (print, len, etc.) in hover documentation"
+                },
+                "pythonHover.contextAware": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable context-aware hover detection"
                 }
             }
         }
@@ -62,8 +94,7 @@
         "watch": "tsc -w -p .",
         "vscode:prepublish": "npm run compile",
         "package": "vsce package",
-        "publish": "vsce publish",
-        "lint": "echo \"(no lint configured)\""
+        "publish": "vsce publish"
     },
     "devDependencies": {
         "@types/node": "^20.5.1",

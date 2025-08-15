@@ -7,12 +7,12 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/YOUR_USERNAME/python-hover.git"
+        "url": "https://github.com/KiidxAtlas/python-hover.git"
     },
     "bugs": {
-        "url": "https://github.com/YOUR_USERNAME/python-hover/issues"
+        "url": "https://github.com/KiidxAtlas/python-hover/issues"
     },
-    "homepage": "https://github.com/YOUR_USERNAME/python-hover#readme",
+    "homepage": "https://github.com/KiidxAtlas/python-hover#readme",
     "engines": {
         "vscode": "^1.90.0"
     },

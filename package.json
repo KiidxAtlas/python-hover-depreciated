@@ -1,0 +1,74 @@
+{
+    "name": "python-hover",
+    "displayName": "Python Hover",
+    "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
+    "version": "1.0.0",
+    "publisher": "REPLACE_WITH_YOUR_PUBLISHER_NAME",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/YOUR_USERNAME/python-hover.git"
+    },
+    "bugs": {
+        "url": "https://github.com/YOUR_USERNAME/python-hover/issues"
+    },
+    "homepage": "https://github.com/YOUR_USERNAME/python-hover#readme",
+    "engines": {
+        "vscode": "^1.90.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Other"
+    ],
+    "keywords": [
+        "python",
+        "documentation",
+        "hover",
+        "intellisense"
+    ],
+    "activationEvents": [
+        "onLanguage:python"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "pythonHover.clearCache",
+                "title": "Clear Documentation Cache",
+                "category": "Python Hover"
+            }
+        ],
+        "configuration": {
+            "title": "Python Hover",
+            "properties": {
+                "pythonHover.pythonVersion": {
+                    "type": "string",
+                    "default": "3",
+                    "description": "Python documentation version to use (e.g., '3', '3.12')",
+                    "pattern": "^[0-9]+(\\.[0-9]+)*$"
+                },
+                "pythonHover.cacheDays": {
+                    "type": "number",
+                    "default": 7,
+                    "minimum": 1,
+                    "maximum": 365,
+                    "description": "Number of days to cache documentation content"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "compile": "tsc -p .",
+        "watch": "tsc -w -p .",
+        "vscode:prepublish": "npm run compile",
+        "package": "vsce package",
+        "publish": "vsce publish",
+        "lint": "echo \"(no lint configured)\""
+    },
+    "devDependencies": {
+        "@types/node": "^20.5.1",
+        "@types/vscode": "^1.90.0",
+        "@vscode/vsce": "^3.6.0",
+        "typescript": "^5.5.0"
+    }
+}

@@ -182,7 +182,7 @@ function htmlToMarkdown(html: string, baseUrl: string): string {
           // For ../ paths, we need to go up one directory from the current URL
           // E.g., from /reference/compound_stmts.html, ../ goes to the parent directory
           cleanHref = href.replace(/^\.\.\//, '');
-          
+
           // Extract the base domain from the full URL
           const urlParts = baseUrl.split('/');
           // Remove the last two parts (filename and directory) to go up one level

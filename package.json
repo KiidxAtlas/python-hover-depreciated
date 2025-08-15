@@ -3,7 +3,7 @@
     "displayName": "Python Hover",
     "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
     "version": "1.0.0",
-    "publisher": "REPLACE_WITH_YOUR_PUBLISHER_NAME",
+    "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
         "type": "git",

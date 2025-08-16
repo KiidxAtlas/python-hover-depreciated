@@ -47,6 +47,11 @@
                 "command": "pythonHover.showStatistics",
                 "title": "Show Cache Statistics",
                 "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.showAllSpecialMethods",
+                "title": "Browse Special Methods (QuickPick)",
+                "category": "Python Hover"
             }
         ],
         "configuration": {

@@ -396,33 +396,21 @@ function buildSpecialMethodsSection(baseUrl: string): string {
   const oc = (name: string) => `[\`${name}\`](${dm}#object.${name})`;
   const tc = (name: string) => `[\`${name}\`](${dm}#type.${name})`;
 
+  const essentials = [
+    '__init__', '__repr__', '__str__', '__len__', '__iter__',
+    '__contains__', '__getitem__', '__setitem__', '__enter__', '__exit__', '__call__'
+  ];
+
   const lines: string[] = [];
   lines.push(`\n**Special methods (click to open docs):**`);
-  // Essentials first (concise)
-  lines.push(`- ${oc('__init__')} · ${oc('__repr__')} · ${oc('__str__')} · ${oc('__len__')} · ${oc('__iter__')} · ${oc('__contains__')} · ${oc('__getitem__')} · ${oc('__setitem__')} · ${oc('__enter__')} · ${oc('__exit__')} · ${oc('__call__')}`);
+  // Essentials only to keep hover compact
+  lines.push(`- ${essentials.map(oc).join(' · ')}`);
 
-  // Collapsible full list to avoid overwhelming the hover
-  lines.push(`<details><summary>More special methods…</summary>`);
+  // Offer a trusted command link to browse the complete list via QuickPick
+  const commandUri = `command:pythonHover.showAllSpecialMethods`;
   lines.push(`
-${oc('__new__')} · ${oc('__del__')}`);
-  lines.push(`${oc('__bytes__')} · ${oc('__format__')}`);
-  lines.push(`${oc('__bool__')} · ${oc('__hash__')}`);
-  lines.push(`${oc('__getattr__')} · ${oc('__getattribute__')} · ${oc('__setattr__')} · ${oc('__delattr__')} · ${oc('__dir__')}`);
-  lines.push(`${oc('__get__')} · ${oc('__set__')} · ${oc('__delete__')} · ${oc('__set_name__')}`);
-  lines.push(`${oc('__mro_entries__')} · ${oc('__init_subclass__')} · ${oc('__class_getitem__')} · ${tc('__instancecheck__')} · ${tc('__subclasscheck__')}`);
-  lines.push(`${oc('__len__')} · ${oc('__length_hint__')} · ${oc('__reversed__')}`);
-  lines.push(`${oc('__getitem__')} · ${oc('__setitem__')} · ${oc('__delitem__')} · ${oc('__missing__')}`);
-  lines.push(`${oc('__int__')} · ${oc('__float__')} · ${oc('__complex__')} · ${oc('__index__')}`);
-  lines.push(`${oc('__round__')} · ${oc('__trunc__')} · ${oc('__floor__')} · ${oc('__ceil__')}`);
-  lines.push(`${oc('__neg__')} · ${oc('__pos__')} · ${oc('__abs__')} · ${oc('__invert__')}`);
-  lines.push(`${oc('__add__')} · ${oc('__sub__')} · ${oc('__mul__')} · ${oc('__matmul__')} · ${oc('__truediv__')} · ${oc('__floordiv__')} · ${oc('__mod__')} · ${oc('__divmod__')} · ${oc('__pow__')} · ${oc('__lshift__')} · ${oc('__rshift__')} · ${oc('__and__')} · ${oc('__xor__')} · ${oc('__or__')}`);
-  lines.push(`${oc('__radd__')} · ${oc('__rsub__')} · ${oc('__rmul__')} · ${oc('__rmatmul__')} · ${oc('__rtruediv__')} · ${oc('__rfloordiv__')} · ${oc('__rmod__')} · ${oc('__rdivmod__')} · ${oc('__rpow__')} · ${oc('__rlshift__')} · ${oc('__rrshift__')} · ${oc('__rand__')} · ${oc('__rxor__')} · ${oc('__ror__')}`);
-  lines.push(`${oc('__iadd__')} · ${oc('__isub__')} · ${oc('__imul__')} · ${oc('__imatmul__')} · ${oc('__itruediv__')} · ${oc('__ifloordiv__')} · ${oc('__imod__')} · ${oc('__ipow__')} · ${oc('__ilshift__')} · ${oc('__irshift__')} · ${oc('__iand__')} · ${oc('__ixor__')} · ${oc('__ior__')}`);
-  lines.push(`${oc('__match_args__')}`);
-  lines.push(`${oc('__buffer__')} · ${oc('__release_buffer__')}`);
-  lines.push(`${oc('__await__')} · ${oc('__aiter__')} · ${oc('__anext__')} · ${oc('__aenter__')} · ${oc('__aexit__')}`);
-  lines.push(`</details>`);
-  lines.push(`\nSee the full list: [Special method names](${dm}#special-method-names)`);
+[Show all special methods…](${commandUri}) · [Reference: Special method names](${dm}#special-method-names)`);
+
   return lines.join('\n');
 }
 
@@ -776,6 +764,36 @@ async function getSectionMarkdown(baseUrl: string, page: string, anchor: string)
 
 export function activate(context: vscode.ExtensionContext) {
   // Register commands
+  const showAllSpecialMethodsCmd = vscode.commands.registerCommand('pythonHover.showAllSpecialMethods', async () => {
+    const cfg = vscode.workspace.getConfiguration("pythonHover");
+    const ver = (cfg.get<string>("pythonVersion") || "3").trim();
+    const baseUrl = `https://docs.python.org/${ver}`;
+    const dm = `${baseUrl}/reference/datamodel.html`;
+
+    const methods: { label: string; description: string; url: string }[] = [];
+    const add = (name: string, kind: 'object' | 'type' = 'object', desc = '') => {
+      methods.push({
+        label: name,
+        description: desc || (kind === 'type' ? 'type special method' : 'object special method'),
+        url: `${dm}#${kind}.${name}`
+      });
+    };
+
+    // Core and many commonly referenced methods
+    ['__init__','__repr__','__str__','__len__','__iter__','__contains__','__getitem__','__setitem__','__delitem__','__enter__','__exit__','__call__','__new__','__del__','__bytes__','__format__','__bool__','__hash__','__getattr__','__getattribute__','__setattr__','__delattr__','__dir__','__get__','__set__','__delete__','__set_name__','__mro_entries__','__init_subclass__','__class_getitem__','__length_hint__','__reversed__','__missing__','__int__','__float__','__complex__','__index__','__round__','__trunc__','__floor__','__ceil__','__neg__','__pos__','__abs__','__invert__','__add__','__sub__','__mul__','__matmul__','__truediv__','__floordiv__','__mod__','__divmod__','__pow__','__lshift__','__rshift__','__and__','__xor__','__or__','__radd__','__rsub__','__rmul__','__rmatmul__','__rtruediv__','__rfloordiv__','__rmod__','__rdivmod__','__rpow__','__rlshift__','__rrshift__','__rand__','__rxor__','__ror__','__iadd__','__isub__','__imul__','__imatmul__','__itruediv__','__ifloordiv__','__imod__','__ipow__','__ilshift__','__irshift__','__iand__','__ixor__','__ior__','__match_args__','__buffer__','__release_buffer__','__await__','__aiter__','__anext__','__aenter__','__aexit__']
+    .forEach(n => add(n));
+    // type-specific checks
+    add('__instancecheck__','type');
+    add('__subclasscheck__','type');
+
+    const pick = await vscode.window.showQuickPick(methods, {
+      matchOnDescription: true,
+      placeHolder: 'Select a special method to open its documentation'
+    });
+    if (pick) {
+      await vscode.env.openExternal(vscode.Uri.parse(pick.url));
+    }
+  });
   const clearCacheCommand = vscode.commands.registerCommand('pythonHover.clearCache', async () => {
     const allKeys = context.globalState.keys();
     const cacheKeys = allKeys.filter(key => key.startsWith('pyDocs:'));
@@ -994,6 +1012,7 @@ export function activate(context: vscode.ExtensionContext) {
     clearCacheCommand,
     refreshContentCommand,
     showStatisticsCommand,
+    showAllSpecialMethodsCmd,
     vscode.languages.registerHoverProvider({ language: "python" }, provider)
   );
 }

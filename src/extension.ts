@@ -6,6 +6,74 @@ const URLCtor = (globalThis as any).URL as (new (input: string, base?: string) =
 
 type Info = { title: string; url: string; anchor: string };
 
+// Smartly truncate markdown at natural boundaries (paragraphs/code fences)
+function smartTruncateMarkdown(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+
+  let cut = limit;
+  let candidate = text.slice(0, cut);
+
+  // Prefer cutting at paragraph boundary within last 200 chars
+  const window = 200;
+  const searchStart = Math.max(0, cut - window);
+  const tail = candidate.slice(searchStart);
+
+  const paraIdx = tail.lastIndexOf('\n\n');
+  if (paraIdx !== -1) {
+    cut = searchStart + paraIdx;
+  } else {
+    // Else try sentence boundary
+    const sentenceIdx = tail.lastIndexOf('. ');
+    if (sentenceIdx !== -1) cut = searchStart + sentenceIdx + 1; // keep the period
+    else {
+      // Else try last newline
+      const nlIdx = tail.lastIndexOf('\n');
+      if (nlIdx !== -1) cut = searchStart + nlIdx;
+    }
+  }
+
+  let out = text.slice(0, cut).trim();
+
+  // Close unmatched fenced code blocks; ensure the closing fence is on its own line
+  let closedFence = false;
+  const fenceCount = (out.match(/```/g) || []).length;
+  if (fenceCount % 2 !== 0) {
+    // Put closing fence on its own line to properly terminate the code block
+    if (!out.endsWith('\n')) out += '\n';
+    out += '```\n';
+    closedFence = true;
+  }
+
+  // Close unmatched inline backticks
+  const inlineTicks = (out.match(/`/g) || []).length;
+  if (inlineTicks % 2 !== 0) out += '`';
+
+  // If we just closed a fence, add ellipsis on a new paragraph to avoid "```..." which breaks closure
+  const ellipsis = closedFence ? '\n\n...' : '...';
+  return out + ellipsis;
+}
+
+// Ensure we are not inside an open fenced code block before appending other markdown
+function ensureClosedFences(text: string): string {
+  let out = text;
+  const fenceCount = (out.match(/```/g) || []).length;
+  if (fenceCount % 2 !== 0) {
+    if (!out.endsWith('\n')) out += '\n';
+    out += '```\n';
+  }
+  // After ensuring fences are closed, handle unmatched inline backticks
+  try {
+    const withoutFences = out.replace(/```[\s\S]*?```/g, '');
+    const inlineTicks = (withoutFences.match(/`/g) || []).length;
+    if (inlineTicks % 2 !== 0) {
+      out += '`';
+    }
+  } catch {
+    // Best-effort; ignore if regex fails
+  }
+  return out;
+}
+
 const MAP: Record<string, Info> = {
   // Control flow keywords
   class: {
@@ -322,39 +390,118 @@ function getContextualInfo(doc: vscode.TextDocument, position: vscode.Position, 
   return MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
 }
 
+// Build a clickable list of Python special methods linking to the Data Model page
+function buildSpecialMethodsSection(baseUrl: string): string {
+  const dm = `${baseUrl}/reference/datamodel.html`;
+  const oc = (name: string) => `[\`${name}\`](${dm}#object.${name})`;
+  const tc = (name: string) => `[\`${name}\`](${dm}#type.${name})`;
+
+  const lines: string[] = [];
+  lines.push(`\n**Special methods (click to open docs):**`);
+  // Essentials first (concise)
+  lines.push(`- ${oc('__init__')} · ${oc('__repr__')} · ${oc('__str__')} · ${oc('__len__')} · ${oc('__iter__')} · ${oc('__contains__')} · ${oc('__getitem__')} · ${oc('__setitem__')} · ${oc('__enter__')} · ${oc('__exit__')} · ${oc('__call__')}`);
+
+  // Collapsible full list to avoid overwhelming the hover
+  lines.push(`<details><summary>More special methods…</summary>`);
+  lines.push(`
+${oc('__new__')} · ${oc('__del__')}`);
+  lines.push(`${oc('__bytes__')} · ${oc('__format__')}`);
+  lines.push(`${oc('__bool__')} · ${oc('__hash__')}`);
+  lines.push(`${oc('__getattr__')} · ${oc('__getattribute__')} · ${oc('__setattr__')} · ${oc('__delattr__')} · ${oc('__dir__')}`);
+  lines.push(`${oc('__get__')} · ${oc('__set__')} · ${oc('__delete__')} · ${oc('__set_name__')}`);
+  lines.push(`${oc('__mro_entries__')} · ${oc('__init_subclass__')} · ${oc('__class_getitem__')} · ${tc('__instancecheck__')} · ${tc('__subclasscheck__')}`);
+  lines.push(`${oc('__len__')} · ${oc('__length_hint__')} · ${oc('__reversed__')}`);
+  lines.push(`${oc('__getitem__')} · ${oc('__setitem__')} · ${oc('__delitem__')} · ${oc('__missing__')}`);
+  lines.push(`${oc('__int__')} · ${oc('__float__')} · ${oc('__complex__')} · ${oc('__index__')}`);
+  lines.push(`${oc('__round__')} · ${oc('__trunc__')} · ${oc('__floor__')} · ${oc('__ceil__')}`);
+  lines.push(`${oc('__neg__')} · ${oc('__pos__')} · ${oc('__abs__')} · ${oc('__invert__')}`);
+  lines.push(`${oc('__add__')} · ${oc('__sub__')} · ${oc('__mul__')} · ${oc('__matmul__')} · ${oc('__truediv__')} · ${oc('__floordiv__')} · ${oc('__mod__')} · ${oc('__divmod__')} · ${oc('__pow__')} · ${oc('__lshift__')} · ${oc('__rshift__')} · ${oc('__and__')} · ${oc('__xor__')} · ${oc('__or__')}`);
+  lines.push(`${oc('__radd__')} · ${oc('__rsub__')} · ${oc('__rmul__')} · ${oc('__rmatmul__')} · ${oc('__rtruediv__')} · ${oc('__rfloordiv__')} · ${oc('__rmod__')} · ${oc('__rdivmod__')} · ${oc('__rpow__')} · ${oc('__rlshift__')} · ${oc('__rrshift__')} · ${oc('__rand__')} · ${oc('__rxor__')} · ${oc('__ror__')}`);
+  lines.push(`${oc('__iadd__')} · ${oc('__isub__')} · ${oc('__imul__')} · ${oc('__imatmul__')} · ${oc('__itruediv__')} · ${oc('__ifloordiv__')} · ${oc('__imod__')} · ${oc('__ipow__')} · ${oc('__ilshift__')} · ${oc('__irshift__')} · ${oc('__iand__')} · ${oc('__ixor__')} · ${oc('__ior__')}`);
+  lines.push(`${oc('__match_args__')}`);
+  lines.push(`${oc('__buffer__')} · ${oc('__release_buffer__')}`);
+  lines.push(`${oc('__await__')} · ${oc('__aiter__')} · ${oc('__anext__')} · ${oc('__aenter__')} · ${oc('__aexit__')}`);
+  lines.push(`</details>`);
+  lines.push(`\nSee the full list: [Special method names](${dm}#special-method-names)`);
+  return lines.join('\n');
+}
+
 // Enhanced example generation
-function getEnhancedExamples(word: string): string {
+function getEnhancedExamples(word: string, baseUrl?: string, doc?: vscode.TextDocument, position?: vscode.Position): string {
+  console.log(`DEBUG: getEnhancedExamples called with word: "${word}"`);
+
   const examples: Record<string, string> = {
-    'class': `
+  'class': `
 **Practical Examples:**
 
 \`\`\`python
-class MyClass(BaseClass):
-    def __init__(self, param):
-        self.param = param
+# Basic class with constructor
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def __str__(self):
+        return f"Person(name='{self.name}', age={self.age})"
+
+    def greet(self):
+        return f"Hello, I'm {self.name}"
+
+# Class with inheritance
+class Student(Person):
+    def __init__(self, name, age, student_id):
+        super().__init__(name, age)
+        self.student_id = student_id
 
     @classmethod
     def from_string(cls, data):
-        return cls(data)
+        name, age, student_id = data.split(',')
+        return cls(name, int(age), student_id)
 
     @staticmethod
-    def utility_method():
-        return "helper"
+    def get_school_year():
+        return "2024-2025"
 
     @property
-    def value(self):
-        return self.param
+    def info(self):
+        return f"{self.name} (ID: {self.student_id})"
 
-    def __str__(self):
-        return f"MyClass({self.param})"
+# Dataclass (Python 3.7+)
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: float
+    y: float
+
+    def distance_from_origin(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
 \`\`\`
 
-**Common Special Methods:**
-- \`__init__(self)\` - Constructor
-- \`__str__(self)\` - String representation
-- \`__repr__(self)\` - Developer representation
-- \`__len__(self)\` - Length support
-- \`__getitem__(self, key)\` - Index access`,
+**Essential Special Methods:**
+- \`__init__(self, ...)\` - Constructor (called when creating instances)
+- \`__str__(self)\` - String representation for users
+- \`__repr__(self)\` - String representation for developers
+- \`__len__(self)\` - Returns length (enables \`len(obj)\`)
+- \`__eq__(self, other)\` - Equality comparison (\`obj1 == obj2\`)
+- \`__lt__(self, other)\` - Less than comparison (\`obj1 < obj2\`)
+- \`__getitem__(self, key)\` - Index access (\`obj[key]\`)
+- \`__setitem__(self, key, value)\` - Index assignment (\`obj[key] = value\`)
+- \`__contains__(self, item)\` - Membership test (\`item in obj\`)
+- \`__iter__(self)\` - Makes object iterable
+- \`__enter__(self)\` & \`__exit__(self, ...)\` - Context manager support
+
+**Property & Method Decorators:**
+- \`@property\` - Creates getter methods
+- \`@classmethod\` - Methods that take class as first argument
+- \`@staticmethod\` - Methods that don't need self or cls
+- \`@abstractmethod\` - Abstract methods (from \`abc\` module)
+
+**Common Patterns:**
+- **Factory methods**: Use \`@classmethod\` to create alternative constructors
+- **Validation**: Use \`@property\` with setters for data validation
+- **Context managers**: Implement \`__enter__\` and \`__exit__\` for \`with\` statements
+- **Collections**: Implement \`__len__\`, \`__getitem__\`, \`__iter__\` for collection-like behavior`,
 
     'def': `
 **Examples:**
@@ -426,7 +573,12 @@ except (ValueError, TypeError) as e:
 \`\`\``
   };
 
-  return examples[word.toLowerCase()] || '';
+  const result = examples[word.toLowerCase()] || '';
+  console.log(`DEBUG: getEnhancedExamples returning for "${word}": ${result.length} characters`);
+  if (result.length > 0) {
+    console.log(`DEBUG: First 100 chars of result: ${result.substring(0, 100)}...`);
+  }
+  return result;
 }
 
 // Rest of your existing functions (fetchText, htmlToMarkdown, etc.)
@@ -749,40 +901,92 @@ export function activate(context: vscode.ExtensionContext) {
           console.log(`Fetching fresh content for ${word} from ${baseUrl}/${info.url}#${info.anchor}`);
           mdBody = await getSectionMarkdown(baseUrl, info.url, info.anchor);
 
-          // Add enhanced examples if enabled
-          if (showExamples) {
-            const examples = getEnhancedExamples(word);
-            if (examples) {
-              mdBody += examples;
-            }
-          }
-
-          // Enforce max content length
-          if (mdBody.length > maxContentLength) {
-            mdBody = mdBody.slice(0, maxContentLength).trim() + '...';
-          }
-
           await context.globalState.update(cacheKey, { ts: now, md: mdBody });
           console.log(`Cached fresh content for ${word}: ${mdBody.length} chars`);
         } catch (error) {
           console.error(`Failed to fetch content for ${word}:`, error);
           const errorMsg = error instanceof Error ? error.message : String(error);
 
-          // Show less intrusive error for failed fetches
-          console.log(`Python Hover: Failed to fetch docs for '${word}': ${errorMsg}`);
-          return undefined;
+          // Fall back to examples-only hover if docs fetch fails
+          console.log(`Python Hover: Failed to fetch docs for '${word}': ${errorMsg}. Falling back to examples-only.`);
+          mdBody = '';
         }
       }
 
-      if (!mdBody) {
-        return undefined;
+      // Proceed even if mdBody is empty to allow examples-only hover
+
+      // Build final markdown ensuring examples are included even when truncating
+  const docsBody = ensureClosedFences(mdBody || ''); // keep docs separate from examples and close any fences
+
+      let examplesBody = '';
+      let specialMethodsBody = '';
+      if (showExamples) {
+        console.log(`DEBUG: showExamples is enabled, getting examples for word: ${word}`);
+        examplesBody = getEnhancedExamples(word, baseUrl, doc, position) || '';
+        if (word.toLowerCase() === 'class') {
+          specialMethodsBody = buildSpecialMethodsSection(baseUrl);
+        }
+        console.log(`DEBUG: getEnhancedExamples returned: ${examplesBody ? examplesBody.length : 0} characters`);
+      } else {
+        console.log(`DEBUG: showExamples is disabled`);
       }
 
-      mdBody += `\n\n[📖 Open official docs](${baseUrl}/${info.url}#${info.anchor})`;
+  const fullUrl = `${baseUrl}/${info.url}#${info.anchor}`;
+  // Use a single straightforward HTTP link with the requested label
+  const linkBody = `\n\n[📖 Open official docs](${fullUrl})`;
 
-      const md = new vscode.MarkdownString(mdBody);
-      md.isTrusted = true;
-      return new vscode.Hover(md, range);
+  let finalBody: string;
+  const unlimited = (maxContentLength ?? 0) <= 0;
+  if (unlimited) {
+    const combinedExamples = ensureClosedFences((specialMethodsBody ? specialMethodsBody + '\n\n' : '') + (examplesBody || ''));
+    let body = ensureClosedFences((docsBody ? docsBody + '\n\n' : '') + combinedExamples);
+    if (!body.endsWith('\n\n')) body += '\n\n';
+    finalBody = body + linkBody.trimStart();
+  } else if (!examplesBody && !specialMethodsBody) {
+        // No examples, just docs (with truncation) + link
+        let docs = docsBody;
+  if (docs.length > maxContentLength) {
+          docs = smartTruncateMarkdown(docs, maxContentLength);
+        }
+  let safeDocs = ensureClosedFences(docs);
+    // Guarantee at least one blank line before link
+    if (!safeDocs.endsWith('\n\n')) safeDocs += '\n\n';
+  finalBody = safeDocs + linkBody.trimStart();
+      } else {
+    // Reserve a portion of the budget for examples/special methods
+        const totalBudget = Math.max(500, maxContentLength); // guard against very small values
+  // Put special methods first so they are not truncated away, and allow a slightly larger cap
+  const combinedExamples = ensureClosedFences((specialMethodsBody ? specialMethodsBody + '\n\n' : '') + (examplesBody || ''));
+  const minExamplesBudget = Math.min(combinedExamples.length, Math.max(500, Math.floor(totalBudget * 0.40)), 1400);
+        // Leave space for the link
+        const linkBudget = Math.min(linkBody.length + 10, 200);
+        let docsBudget = totalBudget - minExamplesBudget - linkBudget;
+        // Ensure docs budget isn't too small
+        if (docsBudget < 300) {
+          docsBudget = Math.max(200, Math.floor(totalBudget * 0.25));
+        }
+
+  let docsPart = docsBody;
+        if (docsPart.length > docsBudget) {
+          docsPart = smartTruncateMarkdown(docsPart, docsBudget);
+        }
+
+  let examplesPart = combinedExamples;
+    if (examplesPart.length > minExamplesBudget) {
+      examplesPart = smartTruncateMarkdown(examplesPart, minExamplesBudget);
+    }
+
+  let safeBody = ensureClosedFences((docsPart ? docsPart + '\n\n' : '') + examplesPart);
+    if (!safeBody.endsWith('\n\n')) safeBody += '\n\n';
+  finalBody = safeBody + linkBody.trimStart();
+      }
+
+  const md = new vscode.MarkdownString();
+  md.isTrusted = true;
+  md.supportHtml = true;
+  // Append the composed markdown in parts to avoid accidental escaping by template handling
+  md.appendMarkdown(finalBody);
+  return new vscode.Hover(md, range);
     }
   };
 

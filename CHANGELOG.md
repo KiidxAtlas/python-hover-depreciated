@@ -1,5 +1,17 @@
 # Change Log
 
+## [2.0.2] - 2025-08-15
+
+### 🐛 Bug Fixes
+- **Fixed Clickable Links**: Documentation links now properly open in browser instead of showing encoded URLs
+- **Enhanced Class Detection**: Improved class method detection with broader search range (50 lines) and better pattern matching
+- **Dynamic Class Analysis**: Fixed issue where special methods weren't being detected in actual classes
+
+### 🚀 Improvements
+- More robust decorator detection for `@classmethod`, `@staticmethod`, and `@property`
+- Better handling of class boundaries and indentation
+- Fallback to examples when no methods are found in a class
+
 ## [2.0.0] - 2025-08-15
 
 ### ✨ Major Enhancements
@@ -7,6 +19,8 @@
 - **Context-Aware Detection**: Smart detection that distinguishes between keywords, functions, and variable names
 - **Enhanced Examples**: Comprehensive, practical code examples for better learning
 - **Advanced Configuration**: 6 new settings for complete customization
+- **🔗 Fixed Clickable Links**: Documentation links are now properly clickable in hover tooltips
+- **🏗️ Dynamic Class Analysis**: When hovering over 'class', shows actual methods from the class including special methods like `__init__`, `__str__`, etc.
 
 ### 🆕 New Keywords & Functions
 - **Built-in Functions**: `print`, `len`, `range`, `enumerate`, `zip`, `map`, `filter`, `sorted`, `reversed`, `sum`, `max`, `min`, `abs`, `round`

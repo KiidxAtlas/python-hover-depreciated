@@ -1,8 +1,9 @@
 {
     "name": "python-hover",
+    "icon": "images/icon.png",
     "displayName": "Python Hover",
     "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -71,10 +72,10 @@
                 },
                 "pythonHover.maxContentLength": {
                     "type": "number",
-                    "default": 1500,
-                    "minimum": 500,
+                    "default": 2200,
+                    "minimum": 0,
                     "maximum": 5000,
-                    "description": "Maximum character length for hover content"
+                    "description": "Maximum character length for hover content. Set to 0 for unlimited."
                 },
                 "pythonHover.includeBuiltins": {
                     "type": "boolean",

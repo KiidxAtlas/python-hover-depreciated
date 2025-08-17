@@ -52,6 +52,31 @@
                 "command": "pythonHover.showAllSpecialMethods",
                 "title": "Browse Special Methods (QuickPick)",
                 "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.openDocsAtCursor",
+                "title": "Open Official Docs at Cursor",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.openDocsInEditorWithUrl",
+                "title": "Open Docs in Editor (Simple Browser)",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.toggleExamples",
+                "title": "Toggle Enhanced Examples",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.copyHoverText",
+                "title": "Copy Hover Text",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.insertClassTemplate",
+                "title": "Insert Class Template",
+                "category": "Python Hover"
             }
         ],
         "configuration": {
@@ -87,10 +112,69 @@
                     "default": true,
                     "description": "Include built-in functions (print, len, etc.) in hover documentation"
                 },
+                "pythonHover.includeDataTypes": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include data types (str, list, dict, etc.) in hover documentation"
+                },
+                "pythonHover.includeConstants": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include constants (None, True, False) in hover documentation"
+                },
+                "pythonHover.includeDocExamples": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include code examples extracted from official docs (not enhanced examples)."
+                },
+                "pythonHover.includeGrammar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include grammar/production blocks from docs when available."
+                },
+                "pythonHover.includeLists": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include the first bullet/numbered list when useful."
+                },
+                "pythonHover.summaryOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show only summary paragraphs (no code or lists) from official docs."
+                },
+                "pythonHover.showSpecialMethodsSection": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "For class hovers, include a compact special methods section."
+                },
+                "pythonHover.offlineOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Do not fetch from the network; show cached docs and/or examples only."
+                },
+                "pythonHover.httpTimeoutMs": {
+                    "type": "number",
+                    "default": 6000,
+                    "minimum": 1000,
+                    "maximum": 30000,
+                    "description": "HTTP timeout (ms) when fetching official docs."
+                },
+                "pythonHover.httpRetries": {
+                    "type": "number",
+                    "default": 1,
+                    "minimum": 0,
+                    "maximum": 3,
+                    "description": "Number of retry attempts on HTTP errors/timeouts."
+                },
                 "pythonHover.contextAware": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable context-aware hover detection"
+                },
+                "pythonHover.showActionLinks": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show helpful action links in hover (open docs, insert template, copy)."
                 }
             }
         }

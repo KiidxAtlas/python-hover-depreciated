@@ -199,6 +199,7 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
             const encoded = encodeURIComponent(JSON.stringify([fullUrl]));
             const openLabel = openTarget === 'external' ? 'Open in Browser' : 'Open in Editor';
             actions.push(`[${openLabel}](command:pythonHover.openDocsInEditorWithUrl?${encoded})`);
+            actions.push(`[Copy URL](command:pythonHover.copyDocsUrl?${encoded})`);
             actions.push(`[Copy Section](command:pythonHover.copyHoverText)`);
             try {
                 const { showActionsInsertTemplates } = await import('./config').then(m => m.getConfig());

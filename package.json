@@ -64,6 +64,11 @@
                 "category": "Python Hover"
             },
             {
+                "command": "pythonHover.copyDocsUrl",
+                "title": "Copy Official Docs URL",
+                "category": "Python Hover"
+            },
+            {
                 "command": "pythonHover.toggleExamples",
                 "title": "Toggle Enhanced Examples",
                 "category": "Python Hover"
@@ -225,11 +230,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show helpful action links in hover (open docs, insert template, copy)."
-                },
-                "pythonHover.dynamicIndexing": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "(Removed) No-op in this version."
                 },
                 "pythonHover.autoLinkPeps": {
                     "type": "boolean",

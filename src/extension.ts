@@ -272,8 +272,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // Open docs inside VS Code (Simple Browser). Accepts optional URL argument.
-    const openDocsInEditorWithUrl = vscode.commands.registerCommand('pythonHover.openDocsInEditorWithUrl', async (urlArg?: string) => {
-        let url = urlArg;
+    const openDocsInEditorWithUrl = vscode.commands.registerCommand('pythonHover.openDocsInEditorWithUrl', async (...args: any[]) => {
+        // Support being called via command URI with JSON args or directly with a string
+        let url: string | undefined = undefined;
+        if (args && args.length) {
+            const first = args[0];
+            if (typeof first === 'string') url = first;
+            else if (Array.isArray(first) && typeof first[0] === 'string') url = first[0];
+        }
         if (!url) {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'python') {
@@ -291,11 +297,53 @@ export function activate(context: vscode.ExtensionContext) {
             const { pythonVersion } = getConfig();
             url = `https://docs.python.org/${pythonVersion}/${info.url}#${info.anchor}`;
         }
+        const { openTarget } = getConfig();
         try {
-            await vscode.commands.executeCommand('simpleBrowser.show', url);
+            if (openTarget === 'external') {
+                await vscode.env.openExternal(vscode.Uri.parse(url!));
+            } else {
+                try {
+                    await vscode.commands.executeCommand('simpleBrowser.show', url);
+                } catch {
+                    await vscode.env.openExternal(vscode.Uri.parse(url!));
+                }
+            }
         } catch (e) {
-            // Fallback to external if simple browser isn't available
             await vscode.env.openExternal(vscode.Uri.parse(url!));
+        }
+    });
+
+    // Copy the official docs URL for the symbol at cursor (or provided via arg) to clipboard
+    const copyDocsUrl = vscode.commands.registerCommand('pythonHover.copyDocsUrl', async (...args: any[]) => {
+        let urlFromArg: string | undefined = undefined;
+        if (args && args.length) {
+            const first = args[0];
+            if (typeof first === 'string') urlFromArg = first;
+            else if (Array.isArray(first) && typeof first[0] === 'string') urlFromArg = first[0];
+        }
+        let url = urlFromArg;
+        if (!url) {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== 'python') {
+                vscode.window.showWarningMessage('Open a Python file to copy docs URL.');
+                return;
+            }
+            const range = editor.document.getWordRangeAtPosition(editor.selection.active, /[A-Za-z_]+/);
+            if (!range) return;
+            const word = editor.document.getText(range);
+            const info = (MAP as any)[word] || (MAP as any)[word.toLowerCase()];
+            if (!info) {
+                vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
+                return;
+            }
+            const { pythonVersion } = getConfig();
+            url = `https://docs.python.org/${pythonVersion}/${info.url}#${info.anchor}`;
+        }
+        try {
+            await vscode.env.clipboard.writeText(url!);
+            vscode.window.showInformationMessage('Copied docs URL to clipboard.');
+        } catch (e) {
+            vscode.window.showWarningMessage('Failed to copy docs URL.');
         }
     });
 
@@ -321,7 +369,8 @@ export function activate(context: vscode.ExtensionContext) {
         copyHoverText,
         insertClassTemplate,
         insertIfTemplate,
-        insertTryTemplate,
+    insertTryTemplate,
+    copyDocsUrl,
         vscode.languages.registerHoverProvider({ language: "python" }, provider)
     );
 }

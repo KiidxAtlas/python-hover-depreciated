@@ -374,6 +374,8 @@
         "typescript": "^5.5.0"
     },
     "dependencies": {
-        "cheerio": "^1.0.0-rc.12"
+        "@types/node-fetch": "^2.6.13",
+        "cheerio": "^1.0.0-rc.12",
+        "node-fetch": "^2.7.0"
     }
 }

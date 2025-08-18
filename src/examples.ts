@@ -203,6 +203,38 @@ export function buildSpecialMethodsSection(baseUrl: string, doc?: import('vscode
 
 export function getEnhancedExamples(word: string, baseUrl?: string, doc?: vscode.TextDocument, position?: vscode.Position): string {
     const examples: Record<string, string> = {
+        'if': `
+**Key points:**
+
+- Test for None with "is" / "is not" (not ==/!=).
+- Truthy/falsy: empty containers, 0, and '' are false; non-empty is true.
+- One branch executes: the first true condition, or else if provided.
+- Prefer elif chains over nested ifs for clarity.
+- Use a conditional expression for small inline choices.
+
+**Examples:**
+
+\`\`\`python
+# Basic if/elif/else
+if x > 10:
+    size = 'large'
+elif x > 5:
+    size = 'medium'
+else:
+    size = 'small'
+
+# Check for None correctly
+if result is None:
+    handle_missing()
+
+# Conditional expression (inline if)
+status = 'ok' if flag else 'disabled'
+
+# Walrus operator to avoid recomputation (Python 3.8+)
+if (n := len(items)) > 0:
+    print(f'{n} items')
+\`\`\`
+`,
         'class': `
 **Practical Examples:**
 
@@ -251,6 +283,14 @@ class Point:
 \`\`\`
 `,
         'def': `
+**Key points:**
+
+- def binds a name in the current local namespace; body runs only when called.
+- Use annotations for readability; they aren't enforced at runtime.
+- Default argument values are evaluated once at def time (beware mutable defaults).
+- Use *args/**kwargs to accept flexible parameters.
+- nonlocal/global affect variable binding scope inside nested functions.
+
 **Examples:**
 
 \`\`\`python
@@ -297,6 +337,14 @@ except ImportError:
 \`\`\`
 `,
         'try': `
+**Key points:**
+
+- Use specific exceptions first; keep broad except last.
+- Optional else runs only if no exception occurred.
+- finally always runs (cleanup).
+- You can catch multiple exceptions in a tuple.
+- Avoid bare except: it hides bugs; prefer Exception or specific types.
+
 **Examples:**
 
 \`\`\`python

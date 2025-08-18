@@ -44,6 +44,19 @@ export const MAP: Record<string, Info> = {
     min: { title: 'min() — Minimum Value', url: 'library/functions.html', anchor: 'min' },
     abs: { title: 'abs() — Absolute Value', url: 'library/functions.html', anchor: 'abs' },
     round: { title: 'round() — Round Number', url: 'library/functions.html', anchor: 'round' },
+    any: { title: 'any() — Any True', url: 'library/functions.html', anchor: 'any' },
+    all: { title: 'all() — All True', url: 'library/functions.html', anchor: 'all' },
+    open: { title: 'open() — Open File', url: 'library/functions.html', anchor: 'open' },
+    isinstance: { title: 'isinstance() — Type Check', url: 'library/functions.html', anchor: 'isinstance' },
+    issubclass: { title: 'issubclass() — Subclass Check', url: 'library/functions.html', anchor: 'issubclass' },
+    getattr: { title: 'getattr() — Get Attribute', url: 'library/functions.html', anchor: 'getattr' },
+    setattr: { title: 'setattr() — Set Attribute', url: 'library/functions.html', anchor: 'setattr' },
+    hasattr: { title: 'hasattr() — Has Attribute', url: 'library/functions.html', anchor: 'hasattr' },
+    delattr: { title: 'delattr() — Delete Attribute', url: 'library/functions.html', anchor: 'delattr' },
+    id: { title: 'id() — Identity', url: 'library/functions.html', anchor: 'id' },
+    pow: { title: 'pow() — Exponentiation', url: 'library/functions.html', anchor: 'pow' },
+    iter: { title: 'iter() — Iterator', url: 'library/functions.html', anchor: 'iter' },
+    next: { title: 'next() — Next Item', url: 'library/functions.html', anchor: 'next' },
     // Data types
     str: { title: 'str — String Type', url: 'library/stdtypes.html', anchor: 'text-sequence-type-str' },
     int: { title: 'int — Integer Type', url: 'library/functions.html', anchor: 'int' },
@@ -57,8 +70,24 @@ export const MAP: Record<string, Info> = {
     None: { title: 'None — Null Value', url: 'library/constants.html', anchor: 'None' },
     True: { title: 'True — Boolean True', url: 'library/constants.html', anchor: 'True' },
     False: { title: 'False — Boolean False', url: 'library/constants.html', anchor: 'False' },
+    // Exceptions (partial list)
+    Exception: { title: 'Exception — Base Exception', url: 'library/exceptions.html', anchor: 'Exception' },
+    BaseException: { title: 'BaseException — Root of Exceptions', url: 'library/exceptions.html', anchor: 'BaseException' },
+    ValueError: { title: 'ValueError — Invalid Value', url: 'library/exceptions.html', anchor: 'ValueError' },
+    TypeError: { title: 'TypeError — Invalid Type', url: 'library/exceptions.html', anchor: 'TypeError' },
+    KeyError: { title: 'KeyError — Missing Mapping Key', url: 'library/exceptions.html', anchor: 'KeyError' },
+    IndexError: { title: 'IndexError — Sequence Index Out of Range', url: 'library/exceptions.html', anchor: 'IndexError' },
+    StopIteration: { title: 'StopIteration — Iterator Exhausted', url: 'library/exceptions.html', anchor: 'StopIteration' }
 };
 
 export const BUILTIN_KEYWORDS = ['print', 'len', 'range', 'enumerate', 'zip', 'map', 'filter', 'sorted', 'reversed', 'sum', 'max', 'min', 'abs', 'round'];
 export const DATA_TYPES = ['str', 'int', 'float', 'bool', 'list', 'dict', 'set', 'tuple'];
 export const CONSTANTS = ['None', 'True', 'False'];
+
+// Helper to map dunder names to the Data Model special method anchor
+export function getDunderInfo(name: string): Info | undefined {
+    if (!/^__.*__$/.test(name)) return undefined;
+    // Most special methods have anchors like object.__init__, object.__getitem__, etc.
+    const anchor = `object.${name}`;
+    return { title: `${name} — Special method`, url: 'reference/datamodel.html', anchor };
+}

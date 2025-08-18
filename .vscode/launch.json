@@ -1,14 +1,34 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Run Extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "npm: compile"
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--disable-extensions",
+                "--disable-extension",
+                "ms-vscode.microsoft-authentication",
+                "--disable-extension",
+                "vscode.github-authentication",
+                "--user-data-dir=${workspaceFolder}/.vscode-dev/user-data",
+                "--extensions-dir=${workspaceFolder}/.vscode-dev/extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/.vscode/extensions/**/*.js",
+                "**/Visual Studio Code.app/**/extensions/**/*.js",
+                "**/resources/app/extensions/**/*.js",
+                "**/resources/app/extensions/github-authentication/**/*.js",
+                "**/resources/app/out/**"
+            ],
+            "smartStep": true,
+            "preLaunchTask": "npm: compile"
+        }
+    ]
 }

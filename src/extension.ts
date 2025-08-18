@@ -20,6 +20,49 @@ import { createHoverProvider } from './hover';
 
 export function activate(context: vscode.ExtensionContext) {
     // Register commands
+    const debugExtraction = vscode.commands.registerCommand('pythonHover.debugExtraction', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'python') {
+            vscode.window.showWarningMessage('Open a Python file and place the cursor on a supported keyword to debug extraction.');
+            return;
+        }
+        const range = editor.document.getWordRangeAtPosition(editor.selection.active, /[A-Za-z_]+/);
+        if (!range) {
+            vscode.window.showInformationMessage('No Python keyword found at cursor position.');
+            return;
+        }
+        const word = editor.document.getText(range);
+        const info = (MAP as any)[word] || (MAP as any)[word.toLowerCase()];
+        if (!info) {
+            vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
+            return;
+        }
+        const { pythonVersion } = getConfig();
+        const baseUrl = `https://docs.python.org/${pythonVersion}`;
+        try {
+            // Invalidate session cache for this section so we re-run the latest extraction pipeline
+            try { (await import('./docs/sections')).invalidateSectionSessionCache(baseUrl, info.url, info.anchor); } catch {}
+            const md = await getSectionMarkdown(baseUrl, info.url, info.anchor);
+            // Rewrite docs.python.org links to our command so clicks open in the Simple Browser
+            const processed = md.replace(/\]\((https:\/\/docs\.python\.org\/[^)]+)\)/gi, (_m, url) => {
+                try {
+                    const encoded = encodeURIComponent(JSON.stringify([url]));
+                    return `](command:pythonHover.openDocsInEditorWithUrl?${encoded})`;
+                } catch {
+                    return `](${url})`;
+                }
+            });
+            const doc = await vscode.workspace.openTextDocument({ content: processed, language: 'markdown' });
+            const editorShown = await vscode.window.showTextDocument(doc, { preview: true });
+            // Also open the Markdown preview to the side for clickable links
+            try {
+                await vscode.commands.executeCommand('markdown.showPreviewToSide', doc.uri);
+            } catch { /* ignore if preview not available */ }
+        } catch (e: any) {
+            const msg = e?.message || String(e);
+            vscode.window.showErrorMessage(`Debug Extraction failed: ${msg}`);
+        }
+    });
     const showAllSpecialMethodsCmd = vscode.commands.registerCommand('pythonHover.showAllSpecialMethods', async () => {
         const { pythonVersion } = getConfig();
         const ver = pythonVersion;
@@ -92,6 +135,46 @@ export function activate(context: vscode.ExtensionContext) {
                 '    def __eq__(self, other):',
                 '        return isinstance(other, ${1:ClassName}) and vars(self) == vars(other)',
                 ''
+            ].join('\n')
+        );
+        await editor.insertSnippet(snippet, editor.selection.active);
+    });
+    // Insert an if/elif/else template at cursor
+    const insertIfTemplate = vscode.commands.registerCommand('pythonHover.insertIfTemplate', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'python') {
+            vscode.window.showWarningMessage('Open a Python file to insert an if statement template.');
+            return;
+        }
+        const snippet = new vscode.SnippetString(
+            [
+                'if ${1:condition}:',
+                '    ${2:pass}',
+                'elif ${3:other_condition}:',
+                '    ${4:pass}',
+                'else:',
+                '    ${5:pass}'
+            ].join('\n')
+        );
+        await editor.insertSnippet(snippet, editor.selection.active);
+    });
+    // Insert a try/except/else/finally template at cursor
+    const insertTryTemplate = vscode.commands.registerCommand('pythonHover.insertTryTemplate', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'python') {
+            vscode.window.showWarningMessage('Open a Python file to insert a try statement template.');
+            return;
+        }
+        const snippet = new vscode.SnippetString(
+            [
+                'try:',
+                '    ${1:pass}',
+                'except ${2:Exception} as ${3:e}:',
+                '    ${4:handle_error}',
+                'else:',
+                '    ${5:pass}',
+                'finally:',
+                '    ${6:cleanup}'
             ].join('\n')
         );
         await editor.insertSnippet(snippet, editor.selection.active);
@@ -227,6 +310,7 @@ export function activate(context: vscode.ExtensionContext) {
     const provider: vscode.HoverProvider = createHoverProvider(context);
 
     context.subscriptions.push(
+        debugExtraction,
         clearCacheCommand,
         refreshContentCommand,
         showStatisticsCommand,
@@ -236,6 +320,8 @@ export function activate(context: vscode.ExtensionContext) {
         openDocsInEditorWithUrl,
         copyHoverText,
         insertClassTemplate,
+        insertIfTemplate,
+        insertTryTemplate,
         vscode.languages.registerHoverProvider({ language: "python" }, provider)
     );
 }

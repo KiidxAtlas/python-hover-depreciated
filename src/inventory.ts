@@ -1,8 +1,6 @@
-import * as zlib from 'zlib';
-import * as fs from 'fs';
-import * as path from 'path';
 import fetch from 'node-fetch';
 import * as vscode from 'vscode';
+import * as zlib from 'zlib';
 
 interface InventoryEntry {
     name: string;

@@ -1,6 +1,7 @@
-import jedi
 import json
 import sys
+
+import jedi
 
 while True:
     try:

@@ -70,7 +70,7 @@ export function getConfig(): HoverConfig {
         autoLinkPeps: cfg.get<boolean>('autoLinkPeps') ?? true,
         fixStandardTypeHierarchyLink: cfg.get<boolean>('fixStandardTypeHierarchyLink') ?? true,
         repairTruncatedDocLinks: cfg.get<boolean>('repairTruncatedDocLinks') ?? true,
-    // indexing removed
+        // indexing removed
         exportIncludeMetadata: cfg.get<boolean>('exportIncludeMetadata') ?? true,
         showKeyPoints: cfg.get<boolean>('showKeyPoints') ?? true,
         showTinyExample: cfg.get<boolean>('showTinyExample') ?? true,

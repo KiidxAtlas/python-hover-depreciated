@@ -37,11 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-    const { getDocsBaseUrl } = await import('./config');
-    const baseUrl = getDocsBaseUrl();
+        const { getDocsBaseUrl } = await import('./config');
+        const baseUrl = getDocsBaseUrl();
         try {
             // Invalidate session cache for this section so we re-run the latest extraction pipeline
-            try { (await import('./docs/sections')).invalidateSectionSessionCache(baseUrl, info.url, info.anchor); } catch {}
+            try { (await import('./docs/sections')).invalidateSectionSessionCache(baseUrl, info.url, info.anchor); } catch { }
             const md = await getSectionMarkdown(baseUrl, info.url, info.anchor);
             // Rewrite docs.python.org links to our command so clicks open in the Simple Browser
             const processed = md.replace(/\]\((https:\/\/docs\.python\.org\/[^)]+)\)/gi, (_m, url) => {
@@ -101,8 +101,8 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-    const { getDocsBaseUrl } = await import('./config');
-    const baseUrl = getDocsBaseUrl();
+        const { getDocsBaseUrl } = await import('./config');
+        const baseUrl = getDocsBaseUrl();
         try {
             const md = await getSectionMarkdown(baseUrl, info.url, info.anchor);
             await vscode.env.clipboard.writeText(md);
@@ -186,8 +186,8 @@ export function activate(context: vscode.ExtensionContext) {
             await context.globalState.update(key, undefined);
         }
         // Clear in-memory hot cache and section session cache
-        try { (globalThis as any).__pyHoverHotCache?.clear?.(); } catch {}
-        try { (await import('./docs/sections')).invalidateSectionSessionCache(); } catch {}
+        try { (globalThis as any).__pyHoverHotCache?.clear?.(); } catch { }
+        try { (await import('./docs/sections')).invalidateSectionSessionCache(); } catch { }
 
         vscode.window.showInformationMessage(`Cleared ${cacheKeys.length} cached Python documentation entries (and session cache).`);
     });
@@ -268,9 +268,9 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-    const { getDocsBaseUrl } = await import('./config');
-    const base = getDocsBaseUrl();
-    const url = `${base}/${info.url}#${info.anchor}`;
+        const { getDocsBaseUrl } = await import('./config');
+        const base = getDocsBaseUrl();
+        const url = `${base}/${info.url}#${info.anchor}`;
         vscode.env.openExternal(vscode.Uri.parse(url));
     });
 
@@ -376,15 +376,15 @@ export function activate(context: vscode.ExtensionContext) {
         refreshContentCommand,
         showStatisticsCommand,
         showAllSpecialMethodsCmd,
-    openDocsAtCursor,
-    toggleExamples,
-    toggleTypeAware,
-    openDocsInEditorWithUrl,
+        openDocsAtCursor,
+        toggleExamples,
+        toggleTypeAware,
+        openDocsInEditorWithUrl,
         copyHoverText,
         insertClassTemplate,
         insertIfTemplate,
-    insertTryTemplate,
-    copyDocsUrl,
+        insertTryTemplate,
+        copyDocsUrl,
         vscode.languages.registerHoverProvider({ language: "python" }, provider)
     );
 }

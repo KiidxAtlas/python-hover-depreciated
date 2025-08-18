@@ -16,9 +16,9 @@ export const createHoverProvider = (context: vscode.ExtensionContext): vscode.Ho
         const word = doc.getText(range);
         let info: { title: string; url: string; anchor: string } | undefined;
 
-    // Use context-aware mapping when enabled; otherwise fall back to static map
-    if (contextAware) info = getContextualInfo(doc, position, word);
-    else info = MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
+        // Use context-aware mapping when enabled; otherwise fall back to static map
+        if (contextAware) info = getContextualInfo(doc, position, word);
+        else info = MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
 
         // Type-aware attribute/method: obj.attr or obj.method(); best-effort mapping to stdtypes
         let usedTypeAware = false;

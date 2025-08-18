@@ -7,11 +7,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--disable-extensions",
-                "--disable-extension",
-                "ms-vscode.microsoft-authentication",
-                "--disable-extension",
-                "vscode.github-authentication",
                 "--user-data-dir=${workspaceFolder}/.vscode-dev/user-data",
                 "--extensions-dir=${workspaceFolder}/.vscode-dev/extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}"

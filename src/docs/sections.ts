@@ -353,12 +353,19 @@ export async function getSectionMarkdown(baseUrl: string, page: string, anchor: 
         if (intro && intro.length > 20) contentText += intro + '\n\n';
     }
 
+    let grammarContent = '';
+
     // Short definition lists are compact and informative; skip for noisy anchors
     if (!summaryOnly && !isNoisyGrammarAnchor) {
         for (let i = 0; i < Math.min(defLists.length, 2) && contentText.length < 1000; i++) {
             const defList = htmlToMarkdown(defLists[i][0], full).trim();
-            if (defList && defList.length > 20) contentText += defList + '\n\n';
+            if (defList && defList.length > 20) grammarContent += defList + '\n\n';
         }
+    }
+
+    // Append grammar content at the end
+    if (grammarContent) {
+        contentText += '\n\n' + grammarContent;
     }
 
     if (!summaryOnly && includeDocExamples) {

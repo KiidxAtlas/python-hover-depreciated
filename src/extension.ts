@@ -19,6 +19,7 @@ import { createHoverProvider } from './hover';
 // Fetch, HTML conversion, and section extraction moved to ./docs and ./utils
 
 export function activate(context: vscode.ExtensionContext) {
+    console.log('Python Hover extension activated');
     // Register commands
     const debugExtraction = vscode.commands.registerCommand('pythonHover.debugExtraction', async () => {
         const editor = vscode.window.activeTextEditor;

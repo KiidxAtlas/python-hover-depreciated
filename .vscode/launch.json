@@ -7,8 +7,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--user-data-dir=${workspaceFolder}/.vscode-dev/user-data",
-                "--extensions-dir=${workspaceFolder}/.vscode-dev/extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "outFiles": [

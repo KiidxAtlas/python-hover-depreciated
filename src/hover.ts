@@ -16,17 +16,9 @@ export const createHoverProvider = (context: vscode.ExtensionContext): vscode.Ho
         const word = doc.getText(range);
         let info: { title: string; url: string; anchor: string } | undefined;
 
-        // Use dynamic index if enabled and available; fall back to static map
-        let dynamicMap: Record<string, { title: string; url: string; anchor: string }> | undefined;
-        const { dynamicIndexing } = getConfig();
-        if (dynamicIndexing) {
-            try {
-                const dm = (globalThis as any).__pyHoverDynamicMap as Record<string, any> | undefined;
-                if (dm) dynamicMap = dm;
-            } catch { /* ignore */ }
-        }
+        // Use context-aware mapping when enabled; otherwise fall back to static map
         if (contextAware) info = getContextualInfo(doc, position, word);
-        else info = (dynamicMap?.[word] || dynamicMap?.[word.toLowerCase()]) || MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
+        else info = MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
 
         // Type-aware attribute/method: obj.attr or obj.method(); best-effort mapping to stdtypes
         let usedTypeAware = false;
@@ -207,6 +199,7 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
             const encoded = encodeURIComponent(JSON.stringify([fullUrl]));
             const openLabel = openTarget === 'external' ? 'Open in Browser' : 'Open in Editor';
             actions.push(`[${openLabel}](command:pythonHover.openDocsInEditorWithUrl?${encoded})`);
+            actions.push(`[Copy URL](command:pythonHover.copyDocsUrl?${encoded})`);
             actions.push(`[Copy Section](command:pythonHover.copyHoverText)`);
             try {
                 const { showActionsInsertTemplates } = await import('./config').then(m => m.getConfig());

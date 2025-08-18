@@ -1,15 +1,10 @@
-node_modules/
-src/**
-!src/**/*.d.ts
-src/test/**
-**/*.test.*
-*.map
-*.log
+node_modules/**
+**/*.map
+**/*.log
 .eslintrc.js
 tsconfig.json
-*.vsix
 .DS_Store
-.vscode/.history
+.vscode/**
 __pycache__/**
 *.pyc
 *.pyo
@@ -19,6 +14,7 @@ simple_*.js
 hover_test.py
 minimal_test.py
 test_hover.py
+*.vsix
 out/extension_backup.*
 out/extension_new.*
 out/extention.*

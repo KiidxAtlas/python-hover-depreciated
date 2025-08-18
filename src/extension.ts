@@ -37,11 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-        const { pythonVersion } = getConfig();
-        const baseUrl = `https://docs.python.org/${pythonVersion}`;
+        const { getDocsBaseUrl } = await import('./config');
+        const baseUrl = getDocsBaseUrl();
         try {
             // Invalidate session cache for this section so we re-run the latest extraction pipeline
-            try { (await import('./docs/sections')).invalidateSectionSessionCache(baseUrl, info.url, info.anchor); } catch {}
+            try { (await import('./docs/sections')).invalidateSectionSessionCache(baseUrl, info.url, info.anchor); } catch { }
             const md = await getSectionMarkdown(baseUrl, info.url, info.anchor);
             // Rewrite docs.python.org links to our command so clicks open in the Simple Browser
             const processed = md.replace(/\]\((https:\/\/docs\.python\.org\/[^)]+)\)/gi, (_m, url) => {
@@ -64,9 +64,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
     const showAllSpecialMethodsCmd = vscode.commands.registerCommand('pythonHover.showAllSpecialMethods', async () => {
-        const { pythonVersion } = getConfig();
-        const ver = pythonVersion;
-        const baseUrl = `https://docs.python.org/${ver}`;
+        const { getDocsBaseUrl } = await import('./config');
+        const baseUrl = getDocsBaseUrl();
         const dm = `${baseUrl}/reference/datamodel.html`;
         // Use helper index, and annotate which are implemented in the active editor/class
         const { getSpecialMethodsIndex, detectImplementedSpecialMethods } = await import('./examples');
@@ -102,8 +101,8 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-        const { pythonVersion } = getConfig();
-        const baseUrl = `https://docs.python.org/${pythonVersion}`;
+        const { getDocsBaseUrl } = await import('./config');
+        const baseUrl = getDocsBaseUrl();
         try {
             const md = await getSectionMarkdown(baseUrl, info.url, info.anchor);
             await vscode.env.clipboard.writeText(md);
@@ -186,8 +185,11 @@ export function activate(context: vscode.ExtensionContext) {
         for (const key of cacheKeys) {
             await context.globalState.update(key, undefined);
         }
+        // Clear in-memory hot cache and section session cache
+        try { (globalThis as any).__pyHoverHotCache?.clear?.(); } catch { }
+        try { (await import('./docs/sections')).invalidateSectionSessionCache(); } catch { }
 
-        vscode.window.showInformationMessage(`Cleared ${cacheKeys.length} cached Python documentation entries.`);
+        vscode.window.showInformationMessage(`Cleared ${cacheKeys.length} cached Python documentation entries (and session cache).`);
     });
 
     const refreshContentCommand = vscode.commands.registerCommand('pythonHover.refreshContent', async () => {
@@ -266,14 +268,21 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
             return;
         }
-        const { pythonVersion } = getConfig();
-        const url = `https://docs.python.org/${pythonVersion}/${info.url}#${info.anchor}`;
+        const { getDocsBaseUrl } = await import('./config');
+        const base = getDocsBaseUrl();
+        const url = `${base}/${info.url}#${info.anchor}`;
         vscode.env.openExternal(vscode.Uri.parse(url));
     });
 
     // Open docs inside VS Code (Simple Browser). Accepts optional URL argument.
-    const openDocsInEditorWithUrl = vscode.commands.registerCommand('pythonHover.openDocsInEditorWithUrl', async (urlArg?: string) => {
-        let url = urlArg;
+    const openDocsInEditorWithUrl = vscode.commands.registerCommand('pythonHover.openDocsInEditorWithUrl', async (...args: any[]) => {
+        // Support being called via command URI with JSON args or directly with a string
+        let url: string | undefined = undefined;
+        if (args && args.length) {
+            const first = args[0];
+            if (typeof first === 'string') url = first;
+            else if (Array.isArray(first) && typeof first[0] === 'string') url = first[0];
+        }
         if (!url) {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.document.languageId !== 'python') {
@@ -288,14 +297,58 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
                 return;
             }
-            const { pythonVersion } = getConfig();
-            url = `https://docs.python.org/${pythonVersion}/${info.url}#${info.anchor}`;
+            const { getDocsBaseUrl } = await import('./config');
+            const base = getDocsBaseUrl();
+            url = `${base}/${info.url}#${info.anchor}`;
+        }
+        const { openTarget } = getConfig();
+        try {
+            if (openTarget === 'external') {
+                await vscode.env.openExternal(vscode.Uri.parse(url!));
+            } else {
+                try {
+                    await vscode.commands.executeCommand('simpleBrowser.show', url);
+                } catch {
+                    await vscode.env.openExternal(vscode.Uri.parse(url!));
+                }
+            }
+        } catch (e) {
+            await vscode.env.openExternal(vscode.Uri.parse(url!));
+        }
+    });
+
+    // Copy the official docs URL for the symbol at cursor (or provided via arg) to clipboard
+    const copyDocsUrl = vscode.commands.registerCommand('pythonHover.copyDocsUrl', async (...args: any[]) => {
+        let urlFromArg: string | undefined = undefined;
+        if (args && args.length) {
+            const first = args[0];
+            if (typeof first === 'string') urlFromArg = first;
+            else if (Array.isArray(first) && typeof first[0] === 'string') urlFromArg = first[0];
+        }
+        let url = urlFromArg;
+        if (!url) {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== 'python') {
+                vscode.window.showWarningMessage('Open a Python file to copy docs URL.');
+                return;
+            }
+            const range = editor.document.getWordRangeAtPosition(editor.selection.active, /[A-Za-z_]+/);
+            if (!range) return;
+            const word = editor.document.getText(range);
+            const info = (MAP as any)[word] || (MAP as any)[word.toLowerCase()];
+            if (!info) {
+                vscode.window.showInformationMessage(`No docs mapping found for '${word}'.`);
+                return;
+            }
+            const { getDocsBaseUrl } = await import('./config');
+            const base = getDocsBaseUrl();
+            url = `${base}/${info.url}#${info.anchor}`;
         }
         try {
-            await vscode.commands.executeCommand('simpleBrowser.show', url);
+            await vscode.env.clipboard.writeText(url!);
+            vscode.window.showInformationMessage('Copied docs URL to clipboard.');
         } catch (e) {
-            // Fallback to external if simple browser isn't available
-            await vscode.env.openExternal(vscode.Uri.parse(url!));
+            vscode.window.showWarningMessage('Failed to copy docs URL.');
         }
     });
 
@@ -305,6 +358,14 @@ export function activate(context: vscode.ExtensionContext) {
         const current = cfg.get<boolean>('showExamples') ?? true;
         await cfg.update('showExamples', !current, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage(`Enhanced examples ${!current ? 'enabled' : 'disabled'}.`);
+    });
+
+    // Toggle type-aware hovers on/off
+    const toggleTypeAware = vscode.commands.registerCommand('pythonHover.toggleTypeAwareHovers', async () => {
+        const cfg = vscode.workspace.getConfiguration('pythonHover');
+        const current = cfg.get<boolean>('typeAwareHovers') ?? true;
+        await cfg.update('typeAwareHovers', !current, vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage(`Type-aware hovers ${!current ? 'enabled' : 'disabled'}.`);
     });
 
     const provider: vscode.HoverProvider = createHoverProvider(context);
@@ -317,11 +378,13 @@ export function activate(context: vscode.ExtensionContext) {
         showAllSpecialMethodsCmd,
         openDocsAtCursor,
         toggleExamples,
+        toggleTypeAware,
         openDocsInEditorWithUrl,
         copyHoverText,
         insertClassTemplate,
         insertIfTemplate,
         insertTryTemplate,
+        copyDocsUrl,
         vscode.languages.registerHoverProvider({ language: "python" }, provider)
     );
 }

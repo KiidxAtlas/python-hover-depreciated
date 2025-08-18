@@ -24,16 +24,13 @@ export type HoverConfig = {
     httpTimeoutMs: number;
     httpRetries: number;
     showActionLinks: boolean;
-    dynamicIndexing: boolean;
-    indexCacheDays: number;
-    autoRefreshIndexOnStartup?: boolean;
+    // dynamic indexing removed
     // Link/markdown customization
     autoLinkPeps?: boolean;
     fixStandardTypeHierarchyLink?: boolean;
     repairTruncatedDocLinks?: boolean;
     // Indexing sources customization
-    indexIncludeGlossary?: boolean;
-    indexIncludePeps?: boolean;
+    // index sources removed
     // Export customization
     exportIncludeMetadata?: boolean;
     showKeyPoints?: boolean;
@@ -69,14 +66,11 @@ export function getConfig(): HoverConfig {
         httpTimeoutMs: cfg.get<number>('httpTimeoutMs') ?? 6000,
         httpRetries: cfg.get<number>('httpRetries') ?? 1,
         showActionLinks: cfg.get<boolean>('showActionLinks') ?? true,
-        dynamicIndexing: cfg.get<boolean>('dynamicIndexing') ?? true,
-        indexCacheDays: cfg.get<number>('indexCacheDays') ?? 7,
-        autoRefreshIndexOnStartup: cfg.get<boolean>('autoRefreshIndexOnStartup') ?? true,
+        // indexing removed
         autoLinkPeps: cfg.get<boolean>('autoLinkPeps') ?? true,
         fixStandardTypeHierarchyLink: cfg.get<boolean>('fixStandardTypeHierarchyLink') ?? true,
         repairTruncatedDocLinks: cfg.get<boolean>('repairTruncatedDocLinks') ?? true,
-        indexIncludeGlossary: cfg.get<boolean>('indexIncludeGlossary') ?? true,
-        indexIncludePeps: cfg.get<boolean>('indexIncludePeps') ?? true,
+        // indexing removed
         exportIncludeMetadata: cfg.get<boolean>('exportIncludeMetadata') ?? true,
         showKeyPoints: cfg.get<boolean>('showKeyPoints') ?? true,
         showTinyExample: cfg.get<boolean>('showTinyExample') ?? true,

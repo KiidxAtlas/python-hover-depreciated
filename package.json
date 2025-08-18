@@ -39,16 +39,6 @@
                 "category": "Python Hover"
             },
             {
-                "command": "pythonHover.rebuildDocsIndex",
-                "title": "Rebuild Dynamic Docs Index",
-                "category": "Python Hover"
-            },
-            {
-                "command": "pythonHover.toggleDynamicIndexing",
-                "title": "Toggle Dynamic Indexing",
-                "category": "Python Hover"
-            },
-            {
                 "command": "pythonHover.refreshContent",
                 "title": "Refresh Current Hover Content",
                 "category": "Python Hover"
@@ -81,26 +71,6 @@
             {
                 "command": "pythonHover.copyHoverText",
                 "title": "Copy Hover Text",
-                "category": "Python Hover"
-            },
-            {
-                "command": "pythonHover.searchDocs",
-                "title": "Search Python Docs…",
-                "category": "Python Hover"
-            },
-            {
-                "command": "pythonHover.exportHoverToMarkdown",
-                "title": "Export Hover to Markdown…",
-                "category": "Python Hover"
-            },
-            {
-                "command": "pythonHover.copyPermalink",
-                "title": "Copy Docs Permalink",
-                "category": "Python Hover"
-            },
-            {
-                "command": "pythonHover.detectDocsVersionFromInterpreter",
-                "title": "Detect Docs Version from Interpreter",
                 "category": "Python Hover"
             },
             {
@@ -258,21 +228,10 @@
                 },
                 "pythonHover.dynamicIndexing": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "Auto-discover symbols and anchors from docs.python.org so the extension stays up to date."
+                    "default": false,
+                    "description": "(Removed) No-op in this version."
                 },
-                "pythonHover.indexCacheDays": {
-                    "type": "number",
-                    "default": 7,
-                    "minimum": 1,
-                    "maximum": 60,
-                    "description": "Cache duration for auto-discovered docs index."
-                },
-                "pythonHover.autoRefreshIndexOnStartup": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "On startup, warm and refresh the dynamic docs index in the background."
-                },
+                
                 "pythonHover.autoLinkPeps": {
                     "type": "boolean",
                     "default": true,
@@ -293,16 +252,7 @@
                     "default": true,
                     "description": "Use a DOM-based parser to extract sections and rewrite links reliably (recommended)."
                 },
-                "pythonHover.indexIncludeGlossary": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Include glossary page in dynamic indexing."
-                },
-                "pythonHover.indexIncludePeps": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Include PEP site root in dynamic indexing (for PEP auto-discovery)."
-                },
+                
                 "pythonHover.exportIncludeMetadata": {
                     "type": "boolean",
                     "default": true,
@@ -339,25 +289,7 @@
                 }
             }
         },
-        "menus": {
-            "commandPalette": [
-                {
-                    "command": "pythonHover.rebuildDocsIndex",
-                    "when": "true",
-                    "group": "navigation@5"
-                },
-                {
-                    "command": "pythonHover.toggleDynamicIndexing",
-                    "when": "true",
-                    "group": "navigation@6"
-                },
-                {
-                    "command": "pythonHover.toggleTypeAwareHovers",
-                    "when": "true",
-                    "group": "navigation@7"
-                }
-            ]
-        }
+    "menus": {}
     },
     "scripts": {
         "compile": "tsc -p .",
@@ -370,7 +302,7 @@
         "@types/node": "^20.5.1",
         "@types/vscode": "^1.90.0",
         "@vscode/vsce": "^3.6.0",
-        "html-entities": "^2.6.0",
+        
         "typescript": "^5.5.0"
     },
     "dependencies": {

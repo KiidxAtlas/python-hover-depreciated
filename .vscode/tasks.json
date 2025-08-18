@@ -94,6 +94,20 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "build: compile ts",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"compile"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
 		}
 	]
 }

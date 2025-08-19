@@ -45,14 +45,6 @@ export interface HoverConfig {
     grammarMaxChars: number;
 }
 
-export interface TelemetryData {
-    keyword: string;
-    success: boolean;
-    timestamp: number;
-    errorType?: string;
-    responseTime?: number;
-}
-
 export interface CacheStats {
     size: number;
     hitRate: number;

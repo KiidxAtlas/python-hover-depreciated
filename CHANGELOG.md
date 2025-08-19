@@ -1,8 +1,40 @@
 # Change Log
 
+## [2.2.1] - 2025-08-18
+
+### 🎯 NEW: Comprehensive Builtin Functions & Dunder Methods Support
+
+- **70+ Builtin Functions**: Complete coverage of Python builtin functions with rich documentation
+  - Core functions: `print()`, `len()`, `range()`, `enumerate()`, `zip()`, `map()`, `filter()`, etc.
+  - Type inspection: `isinstance()`, `type()`, `hasattr()`, `getattr()`, `super()`, etc.
+  - Conversion functions: `str()`, `int()`, `repr()`, `bin()`, `hex()`, `ord()`, `chr()`, etc.
+  - Mathematical: `abs()`, `round()`, `pow()`, `divmod()`, `sum()`, `max()`, `min()`, etc.
+
+- **80+ Dunder Methods**: Complete special method documentation with context awareness
+  - Object lifecycle: `__init__()`, `__new__()`, `__del__()`
+  - String representation: `__str__()`, `__repr__()`, `__format__()`
+  - Comparison operations: `__eq__()`, `__lt__()`, `__gt__()`, etc.
+  - Container protocol: `__len__()`, `__getitem__()`, `__setitem__()`, `__contains__()`
+  - Iterator protocol: `__iter__()`, `__next__()`
+  - Arithmetic operations: `__add__()`, `__sub__()`, `__mul__()`, etc.
+  - Context managers: `__enter__()`, `__exit__()`
+  - And many more...
+
+- **Smart Context-Aware Detection**:
+  - Enhanced dunder method docs show class context: `__init__() — Constructor for MyClass`
+  - Builtin functions adapt to usage: `len() — Get length of sequence/collection`
+  - Data types show different docs based on context (constructor vs type annotation vs inheritance)
+
+### 📚 Documentation Coverage Enhancement
+
+- **150+ Items**: From ~30 keywords to 150+ documented Python constructs
+- **Complete Coverage**: Keywords, builtins, data types, dunder methods, exceptions
+- **Context Awareness**: Documentation adapts based on code context and usage patterns
+- **Professional Quality**: Rich, detailed documentation sourced from official Python docs
+
 ## [2.2.0] - 2025-08-18
 
-### 🚀 Major Enhancements
+### 🚀 Foundation: Major Enhancements
 
 - **Enhanced Caching System**: Implemented LRU cache with disk persistence and TTL support
 - **Network Retry Logic**: Added exponential backoff HTTP client with smart error handling
@@ -31,6 +63,13 @@
 - **Enhanced HTTP Client**: Configurable timeouts, retry logic, and error classification
 - **Progress Management**: Centralized progress tracking with status bar integration
 - **Smart Context Analysis**: Improved detection of Python patterns and suggestions
+
+### 📚 Documentation Coverage
+
+- **150+ Items**: From ~30 keywords to 150+ documented Python constructs
+- **Complete Coverage**: Keywords, builtins, data types, dunder methods, exceptions
+- **Context Awareness**: Documentation adapts based on code context and usage patterns
+- **Professional Quality**: Rich, detailed documentation sourced from official Python docs
 
 ## [2.1.4] - 2025-08-17
 

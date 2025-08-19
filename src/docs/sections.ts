@@ -116,7 +116,7 @@ export async function getSectionMarkdown(baseUrl: string, page: string, anchor: 
     const full = `${baseUrl.replace(/\/$/, '')}/${page}`;
     const { summaryOnly, includeDocExamples, includeGrammar, includeLists, useDomParser, showKeyPoints } = getConfig();
 
-    const cacheKey = `sec:${baseUrl}:${page}#${anchor}`;
+    const cacheKey = `sec:v8:${baseUrl}:${page}#${anchor}`;
     const now = Date.now();
     const cached = sessionCache.get(cacheKey);
     if (cached && (now - cached.ts) < SESSION_TTL) return cached.md;

@@ -18,7 +18,30 @@ out/extension_backup.*
 out/extension_new.*
 out/extention.*
 
-python/**
-src/test/**
-IMPLEMENTATION_SUMMARY.md
-IMPROVEMENTS.md
+# Source files - use bundled version instead
+src/**
+out/test/**
+node_modules/**
+!node_modules/vscode-languageclient/**
+
+# Build and development files
+esbuild.js
+.gitignore
+.npmignore
+tsconfig.json
+webpack.config.js
+*.ts
+!*.d.ts
+
+# Documentation not needed in extension
+*.md
+!readme.md
+!LICENSE.md
+!CHANGELOG.md
+!RELEASE_NOTES.md
+!ENHANCED_FEATURES.md
+
+# Test files
+test/**
+**/*.test.*
+**/*.spec.*

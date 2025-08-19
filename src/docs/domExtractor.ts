@@ -10,6 +10,25 @@ export function extractSectionHtmlDom(fullHtml: string, pageUrl: string, anchor:
         if (!node || node.length === 0) throw new Error(`Anchor ${anchor} not found`);
     }
 
+    // Special handling for definition list items (dt/dd pairs) - common in Python builtin docs
+    if (node.is('dt')) {
+        const frag: string[] = [];
+        // Add the dt element itself
+        frag.push($.html(node) || '');
+
+        // Find the corresponding dd element(s) - they immediately follow the dt
+        let cur = node.next();
+        while (cur && cur.length && cur.is('dd')) {
+            frag.push($.html(cur) || '');
+            cur = cur.next();
+        }
+
+        // Wrap in a dl container to maintain proper structure
+        const container = load(`<dl>${frag.join('')}</dl>`);
+        sanitizeAndRewrite(container, pageUrl);
+        return container.html() || '';
+    }
+
     // If the anchor is on a <section> (as in Sphinx docs), extract that section only.
     // Otherwise, prefer the closest section ancestor that contains the anchor.
     let section = node.is('section') ? node : node.closest('section');
@@ -77,7 +96,7 @@ function sanitizeAndRewrite(container: CheerioAPI, pageUrl: string) {
         }
     });
     // Keep only safe tags
-    const allowedTags = new Set(['div', 'section', 'p', 'a', 'ul', 'ol', 'li', 'pre', 'code', 'em', 'strong', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+    const allowedTags = new Set(['div', 'section', 'p', 'a', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'pre', 'code', 'em', 'strong', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
     $$('*').each((_, el) => {
         const tag = (el as any).tagName?.toLowerCase() || '';
         if (!allowedTags.has(tag)) {

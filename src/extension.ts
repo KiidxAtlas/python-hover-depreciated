@@ -54,6 +54,24 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize enhanced systems
     initializeEnhancedSystems(context);
 
+    // PRIORITY: Register hover provider FIRST for higher priority over other extensions
+    const provider: vscode.HoverProvider = createHoverProvider(context);
+
+    // Register with multiple selectors for maximum coverage and priority
+    const documentSelectors = [
+        { language: "python", scheme: "file", pattern: "**/*.py" },
+        { language: "python", scheme: "file", pattern: "**/*.pyw" },
+        { language: "python", scheme: "untitled" },
+        { language: "python", scheme: "file" },
+        { language: "python" } // fallback
+    ];
+
+    for (const selector of documentSelectors) {
+        context.subscriptions.push(
+            vscode.languages.registerHoverProvider(selector, provider)
+        );
+    }
+
     // Register commands
     const debugExtraction = vscode.commands.registerCommand('pythonHover.debugExtraction', async () => {
         const editor = vscode.window.activeTextEditor;
@@ -215,16 +233,42 @@ export function activate(context: vscode.ExtensionContext) {
     });
     const clearCacheCommand = vscode.commands.registerCommand('pythonHover.clearCache', async () => {
         const allKeys = context.globalState.keys();
-        const cacheKeys = allKeys.filter(key => key.startsWith('pyDocs:'));
+        // Clear all cache types: pyDocs:, hot:, sec:, and any others
+        const cacheKeys = allKeys.filter(key =>
+            key.startsWith('pyDocs:') ||
+            key.startsWith('hot:') ||
+            key.startsWith('sec:') ||
+            key.includes('cache') ||
+            key.includes('Cache')
+        );
 
+        let clearedCount = 0;
         for (const key of cacheKeys) {
             await context.globalState.update(key, undefined);
+            clearedCount++;
         }
-        // Clear in-memory hot cache and section session cache
-        try { (globalThis as any).__pyHoverHotCache?.clear?.(); } catch { }
-        try { (await import('./docs/sections')).invalidateSectionSessionCache(); } catch { }
 
-        vscode.window.showInformationMessage(`Cleared ${cacheKeys.length} cached Python documentation entries (and session cache).`);
+        // Clear all in-memory caches
+        try {
+            // Clear hot cache manager
+            const { CacheManager } = await import('./utils/cache');
+            const cacheManager = CacheManager.getInstance();
+            cacheManager.clear();
+        } catch { }
+
+        try {
+            // Clear global hot cache
+            (globalThis as any).__pyHoverHotCache?.clear?.();
+        } catch { }
+
+        try {
+            // Clear section session cache
+            (await import('./docs/sections')).invalidateSectionSessionCache();
+        } catch { }
+
+        vscode.window.showInformationMessage(
+            `🗑️ Cleared ${clearedCount} cached entries and all in-memory caches. Next hover will fetch fresh documentation.`
+        );
     });
 
     const refreshContentCommand = vscode.commands.registerCommand('pythonHover.refreshContent', async () => {
@@ -235,26 +279,57 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const position = editor.selection.active;
-        const range = editor.document.getWordRangeAtPosition(position, /[A-Za-z_]+/);
+        const range = editor.document.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
         if (!range) {
             vscode.window.showInformationMessage('No Python keyword found at cursor position.');
             return;
         }
 
         const word = editor.document.getText(range);
-        if (!MAP[word]) {
-            vscode.window.showInformationMessage(`'${word}' is not a supported Python keyword.`);
+
+        // Enhanced lookup that includes builtin functions and dunder methods
+        const { getContextualInfo } = await import('./context');
+        const info = getContextualInfo(editor.document, position, word) || MAP[word] || MAP[word.toLowerCase()];
+
+        if (!info) {
+            vscode.window.showInformationMessage(`'${word}' is not a supported Python keyword or function.`);
             return;
         }
 
-        // Clear cache for this specific keyword
+        // Clear cache for this specific keyword - update all cache types
         const { pythonVersion } = getConfig();
         const ver = pythonVersion;
-        const info = MAP[word];
-        const cacheKey = `pyDocs:v7:${ver}:${info.url}#${info.anchor}`;
+        const allKeys = context.globalState.keys();
 
-        await context.globalState.update(cacheKey, undefined);
-        vscode.window.showInformationMessage(`Refreshed documentation cache for '${word}'.`);
+        // Clear all related cache entries for this word
+        const relatedKeys = allKeys.filter(key =>
+            (key.includes(info.url) && key.includes(info.anchor)) ||
+            key.includes(`pyDocs:v8:${ver}:${info.url}#${info.anchor}`) ||
+            key.includes(`hot:v8:${ver}:${info.url}#${info.anchor}`) ||
+            key.includes(`sec:v8:`)
+        );
+
+        let clearedCount = 0;
+        for (const key of relatedKeys) {
+            await context.globalState.update(key, undefined);
+            clearedCount++;
+        }
+
+        // Clear in-memory caches for this item
+        try {
+            const { CacheManager } = await import('./utils/cache');
+            const cacheManager = CacheManager.getInstance();
+            // Note: CacheManager doesn't have a specific delete method for single items
+            // so we'll let the session cache invalidation handle it
+        } catch { }
+
+        try {
+            (await import('./docs/sections')).invalidateSectionSessionCache(undefined, info.url, info.anchor);
+        } catch { }
+
+        vscode.window.showInformationMessage(
+            `🔄 Refreshed documentation for '${word}' (cleared ${clearedCount} cache entries). Next hover will fetch fresh content.`
+        );
     });
 
     const showStatisticsCommand = vscode.commands.registerCommand('pythonHover.showStatistics', async () => {
@@ -403,7 +478,49 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`Type-aware hovers ${!current ? 'enabled' : 'disabled'}.`);
     });
 
-    const provider: vscode.HoverProvider = createHoverProvider(context);
+    // Reload extension for priority testing
+    const reloadExtension = vscode.commands.registerCommand('pythonHover.reloadExtension', async () => {
+        const result = await vscode.window.showInformationMessage(
+            'This will reload VS Code to reset extension priorities. Continue?',
+            'Reload Window', 'Cancel'
+        );
+        if (result === 'Reload Window') {
+            vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+    });
+
+    // Test lambda extraction specifically
+    const testLambda = vscode.commands.registerCommand('pythonHover.testLambda', async () => {
+        try {
+            const { getSectionMarkdown } = await import('./docs/sections');
+            const { getDocsBaseUrl } = await import('./config');
+            const baseUrl = getDocsBaseUrl();
+
+            const info = {
+                title: 'lambda — Anonymous Functions',
+                url: 'reference/expressions.html',
+                anchor: 'lambda-expressions'
+            };
+
+            vscode.window.showInformationMessage('Testing lambda extraction...');
+
+            const result = await getSectionMarkdown(baseUrl, info.url, info.anchor);
+
+            // Show first 300 characters
+            const preview = result.substring(0, 300) + (result.length > 300 ? '...' : '');
+
+            const doc = await vscode.workspace.openTextDocument({
+                content: `# Lambda Extraction Test\n\n**URL:** ${baseUrl}/${info.url}#${info.anchor}\n\n**Length:** ${result.length} characters\n\n**Preview:**\n\n${preview}\n\n**Full Content:**\n\n${result}`,
+                language: 'markdown'
+            });
+
+            await vscode.window.showTextDocument(doc, { preview: true });
+
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Lambda test failed: ${error.message}`);
+            console.error('Lambda extraction error:', error);
+        }
+    });
 
     context.subscriptions.push(
         debugExtraction,
@@ -414,13 +531,14 @@ export function activate(context: vscode.ExtensionContext) {
         openDocsAtCursor,
         toggleExamples,
         toggleTypeAware,
+        reloadExtension,
+        testLambda,
         openDocsInEditorWithUrl,
         copyHoverText,
         insertClassTemplate,
         insertIfTemplate,
         insertTryTemplate,
-        copyDocsUrl,
-        vscode.languages.registerHoverProvider({ language: "python" }, provider)
+        copyDocsUrl
     );
 }
 

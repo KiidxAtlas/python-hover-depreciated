@@ -8,13 +8,12 @@ Test these new features:
 3. Hover over DATA TYPES: str, int, float, bool, list, dict, set, tuple
 4. Hover over CONSTANTS: None, True, False
 5. Hover over CONTROL: break, continue, pass, return, raise, assert, del
+6. Hover over DUNDER METHODS: __init__, __str__, __len__, __getitem__, etc.
+7. Hover over ENHANCED BUILTINS: isinstance, hasattr, getattr, super, property, etc.
 """
 
 import asyncio
 import json
-import os
-import sys
-from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -23,43 +22,204 @@ DEBUG = True
 VERSION = "1.0.0"
 CONFIG_PATH = None
 
+
 class ExampleClass:
     """A sample class to demonstrate enhanced hover documentation."""
 
     def __init__(self, name: str, items: List[str] = None):
+        """Initialize the example class. Hover over __init__ to see enhanced docs."""
         self.name = name
         self.items = items or []
 
     def __str__(self) -> str:
+        """String representation. Hover over __str__ to see dunder method docs."""
         return f"ExampleClass(name={self.name}, items={len(self.items)})"
 
+    def __repr__(self) -> str:
+        """Developer representation. Hover over __repr__ for dunder docs."""
+        return f"ExampleClass(name={self.name!r}, items={self.items!r})"
+
     def __len__(self) -> int:
+        """Length of items. Hover over __len__ to see sequence protocol docs."""
         return len(self.items)
 
+    def __getitem__(self, index: int) -> str:
+        """Get item by index. Hover over __getitem__ for container protocol docs."""
+        return self.items[index]
+
+    def __setitem__(self, index: int, value: str) -> None:
+        """Set item by index. Hover over __setitem__ for container protocol docs."""
+        self.items[index] = value
+
+    def __contains__(self, item: str) -> bool:
+        """Check membership. Hover over __contains__ for membership test docs."""
+        return item in self.items
+
+    def __iter__(self):
+        """Iterator protocol. Hover over __iter__ for iterator docs."""
+        return iter(self.items)
+
+    def __eq__(self, other) -> bool:
+        """Equality comparison. Hover over __eq__ for comparison protocol docs."""
+        if not isinstance(other, ExampleClass):
+            return False
+        return self.name == other.name and self.items == other.items
+
+    def __hash__(self) -> int:
+        """Hash value. Hover over __hash__ for hashing protocol docs."""
+        return hash((self.name, tuple(self.items)))
+
     @classmethod
-    def from_config(cls, config_path: Path) -> 'ExampleClass':
+    def from_config(cls, config_path: Path) -> "ExampleClass":
         """Create instance from configuration file."""
         try:
             with open(config_path) as f:
                 config = json.loads(f.read())
-            return cls(config.get('name', 'default'), config.get('items', []))
+            return cls(config.get("name", "default"), config.get("items", []))
         except FileNotFoundError:
             print(f"Config file not found: {config_path}")
-            return cls('default')
+            return cls("default")
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in config: {e}")
-        finally:
-            print("Config loading completed")
-
-    @staticmethod
-    def utility_method(data: Any) -> str:
-        """Static utility method."""
-        return str(data).upper()
 
     @property
     def item_count(self) -> int:
-        """Property example."""
+        """Number of items. Hover over @property to see descriptor docs."""
         return len(self.items)
+
+    @staticmethod
+    def validate_name(name: str) -> bool:
+        """Validate name format. Hover over @staticmethod for decorator docs."""
+        return isinstance(name, str) and len(name) > 0
+
+
+# === BUILTIN FUNCTION TESTING SECTION ===
+def test_builtin_functions():
+    """Test various builtin functions for enhanced hover documentation."""
+
+
+def test_builtin_functions():
+    """Test builtin function interactions for enhanced hover documentation."""
+
+    # Core builtins - hover over each function name
+    data = [1, 2, 3, 4, 5]
+    print("Testing builtin functions:")  # Hover over 'print'
+
+    # Length and counting
+    # Test builtin function len - fixed extraction
+    my_list = [1, 2, 3, 4, 5]
+    length = len(my_list)  # Hover over 'len' to test fix
+    total = sum(data)  # Hover over 'sum'
+    maximum = max(data)  # Hover over 'max'
+    minimum = min(data)  # Hover over 'min'
+
+    # Iteration builtins
+    for i, item in enumerate(data):  # Hover over 'enumerate'
+        pass
+
+    numbers = list(range(10))  # Hover over 'range' and 'list'
+    reversed_nums = list(reversed(numbers))  # Hover over 'reversed'
+
+    # Filtering and mapping
+    evens = list(filter(lambda x: x % 2 == 0, numbers))  # Hover over 'filter'
+    doubled = list(map(lambda x: x * 2, numbers))  # Hover over 'map'
+    sorted_data = sorted(data, reverse=True)  # Hover over 'sorted'
+
+    # Type checking and conversion
+    if isinstance(data, list):  # Hover over 'isinstance'
+        str_data = str(data)  # Hover over 'str'
+        int_val = int("42")  # Hover over 'int'
+        float_val = float(3.14)  # Hover over 'float'
+        bool_val = bool(data)  # Hover over 'bool'
+
+    # Attribute access builtins
+    if hasattr(data, "append"):  # Hover over 'hasattr'
+        append_method = getattr(data, "append")  # Hover over 'getattr'
+        setattr(data, "custom_attr", "value")  # Hover over 'setattr'
+
+    # Object inspection
+    obj_id = id(data)  # Hover over 'id'
+    obj_type = type(data)  # Hover over 'type'
+    obj_hash = hash("string")  # Hover over 'hash'
+    obj_vars = vars()  # Hover over 'vars'
+    all_globals = globals()  # Hover over 'globals'
+    all_locals = locals()  # Hover over 'locals'
+    obj_dir = dir(data)  # Hover over 'dir'
+
+    # Advanced builtins
+    is_callable = callable(print)  # Hover over 'callable'
+    obj_repr = repr(data)  # Hover over 'repr'
+    ascii_repr = ascii("héllo")  # Hover over 'ascii'
+
+    # Math builtins
+    absolute = abs(-5)  # Hover over 'abs'
+    rounded = round(3.14159, 2)  # Hover over 'round'
+    power = pow(2, 3)  # Hover over 'pow'
+    quotient, remainder = divmod(10, 3)  # Hover over 'divmod'
+
+    # Logical builtins
+    all_true = all([True, True, True])  # Hover over 'all'
+    any_true = any([False, True, False])  # Hover over 'any'
+
+    # Conversion builtins
+    binary = bin(42)  # Hover over 'bin'
+    octal = oct(42)  # Hover over 'oct'
+    hexadecimal = hex(42)  # Hover over 'hex'
+    unicode_point = ord("A")  # Hover over 'ord'
+    character = chr(65)  # Hover over 'chr'
+
+    return "Builtin function tests completed"
+
+
+# === DUNDER METHOD TESTING SECTION ===
+def test_dunder_methods():
+    """Test dunder method interactions for enhanced hover documentation."""
+
+    # Create test objects
+    obj1 = ExampleClass("test1", ["a", "b", "c"])
+    obj2 = ExampleClass("test2", ["x", "y", "z"])
+
+    # String representation dunder methods
+    string_repr = str(obj1)  # Uses __str__ dunder method
+    dev_repr = repr(obj1)  # Uses __repr__ dunder method
+
+    # Length and container dunder methods
+    length = len(obj1)  # Uses __len__ dunder method
+    first_item = obj1[0]  # Uses __getitem__ dunder method
+    obj1[0] = "modified"  # Uses __setitem__ dunder method
+    contains_item = "a" in obj1  # Uses __contains__ dunder method
+
+    # Iterator dunder methods
+    for item in obj1:  # Uses __iter__ dunder method
+        print(item)
+
+    # Comparison dunder methods
+    are_equal = obj1 == obj2  # Uses __eq__ dunder method
+    are_different = obj1 != obj2  # Uses __ne__ dunder method
+
+    # Hash dunder method
+    obj_hash = hash(obj1)  # Uses __hash__ dunder method
+
+    # Boolean dunder method
+    is_truthy = bool(obj1)  # Uses __bool__ dunder method
+
+    return "Dunder method tests completed"
+
+
+# === INHERITANCE AND SUPER TESTING ===
+class DerivedClass(ExampleClass):
+    """Derived class to test super() and inheritance patterns."""
+
+    def __init__(self, name: str, items: List[str] = None, extra_data: str = ""):
+        """Initialize derived class. Hover over super() to see parent access docs."""
+        super().__init__(name, items)  # Hover over 'super' for enhanced docs
+        self.extra_data = extra_data
+
+    def __str__(self) -> str:
+        """Override string representation."""
+        parent_str = super().__str__()  # Another super() usage
+        return f"{parent_str} + extra: {self.extra_data}"
+
 
 def example_function(items: List[str], threshold: int = 10) -> Optional[Dict[str, Any]]:
     """Demonstrates various Python keywords and built-ins."""
@@ -76,19 +236,19 @@ def example_function(items: List[str], threshold: int = 10) -> Optional[Dict[str
 
     # Test data types and type checking
     result: Dict[str, Any] = {
-        'total': len(items),
-        'filtered': len(filtered_items),
-        'unique': len(set(filtered_items)),
-        'max_len': max(len(item) for item in filtered_items) if filtered_items else 0,
-        'min_len': min(len(item) for item in filtered_items) if filtered_items else 0,
-        'sum_lens': sum(len(item) for item in filtered_items)
+        "total": len(items),
+        "filtered": len(filtered_items),
+        "unique": len(set(filtered_items)),
+        "max_len": max(len(item) for item in filtered_items) if filtered_items else 0,
+        "min_len": min(len(item) for item in filtered_items) if filtered_items else 0,
+        "sum_lens": sum(len(item) for item in filtered_items),
     }
 
     # Exception handling example
     try:
-        result['average'] = result['sum_lens'] / result['total']
+        result["average"] = result["sum_lens"] / result["total"]
     except ZeroDivisionError:
-        result['average'] = 0.0
+        result["average"] = 0.0
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise  # Re-raise
@@ -99,6 +259,7 @@ def example_function(items: List[str], threshold: int = 10) -> Optional[Dict[str
 
     return result
 
+
 def process_with_loops(data: List[Any]) -> List[Any]:
     """Test various loop constructs and control flow."""
     processed = []
@@ -107,7 +268,7 @@ def process_with_loops(data: List[Any]) -> List[Any]:
     for index, item in enumerate(data):
         if item is None:
             continue  # Skip None values
-        elif isinstance(item, str) and item.startswith('#'):
+        elif isinstance(item, str) and item.startswith("#"):
             break  # Stop at comment marker
         elif isinstance(item, (int, float)) and item < 0:
             pass  # Do nothing for negative numbers
@@ -117,7 +278,7 @@ def process_with_loops(data: List[Any]) -> List[Any]:
     # While loop with else
     counter = 0
     while counter < len(processed):
-        if processed[counter][1] == 'STOP':
+        if processed[counter][1] == "STOP":
             break
         counter += 1
     else:
@@ -128,6 +289,7 @@ def process_with_loops(data: List[Any]) -> List[Any]:
     zipped_data = list(zip(indices, processed))
 
     return processed
+
 
 async def async_example(urls: List[str]) -> List[str]:
     """Demonstrates async/await keywords."""
@@ -144,6 +306,7 @@ async def async_example(urls: List[str]) -> List[str]:
 
     return results
 
+
 def generator_example(n: int):
     """Demonstrates yield keyword and generators."""
     for i in range(n):
@@ -152,16 +315,17 @@ def generator_example(n: int):
         else:
             yield from [i, i + 1]  # yield from syntax
 
+
 def context_manager_example():
     """Demonstrates with statement and context managers."""
 
     # Single context manager
-    with open('example.txt', 'w') as f:
+    with open("example.txt", "w") as f:
         f.write("Hello, world!")
 
     # Multiple context managers
     try:
-        with open('input.txt') as inp, open('output.txt', 'w') as out:
+        with open("input.txt") as inp, open("output.txt", "w") as out:
             content = inp.read()
             out.write(content.upper())
     except FileNotFoundError:
@@ -179,6 +343,7 @@ def context_manager_example():
 
     with CustomContext():
         print("Inside custom context")
+
 
 def variable_scope_examples():
     """Test global and nonlocal keywords."""
@@ -198,6 +363,7 @@ def variable_scope_examples():
     nested_function()
     return local_var
 
+
 def assertion_and_deletion():
     """Test assert and del keywords."""
     data = [1, 2, 3, 4, 5]
@@ -214,6 +380,7 @@ def assertion_and_deletion():
     del temp_var  # Delete variable
 
     return data
+
 
 def match_case_example(value: Any) -> str:
     """Pattern matching example (Python 3.10+)."""
@@ -233,6 +400,7 @@ def match_case_example(value: Any) -> str:
         case _:
             return "Unknown type"
 
+
 # Lambda examples with built-ins
 numbers = [1, 2, 3, 4, 5, -1, -2]
 squares = list(map(lambda x: x**2, numbers))
@@ -246,7 +414,7 @@ example_int = int("456")
 example_float = float("3.14")
 example_bool = bool(1)
 example_list = list(range(5))
-example_dict = dict(zip(['a', 'b', 'c'], [1, 2, 3]))
+example_dict: Dict[str, int] = dict(zip(["a", "b", "c"], [1, 2, 3]))
 example_set = set([1, 2, 2, 3, 3, 3])
 example_tuple = tuple(range(3))
 
@@ -281,13 +449,21 @@ if __name__ == "__main__":
     print(f"Cleaned data: {cleaned_data}")
 
     # Test pattern matching
-    test_values = [42, -10, 0, "hello", "very long string here", [1, 2], {"key": "value"}]
+    test_values = [
+        42,
+        -10,
+        0,
+        "hello",
+        "very long string here",
+        [1, 2],
+        {"key": "value"},
+    ]
     for val in test_values:
         try:
             match_result = match_case_example(val)
             print(f"Match {val}: {match_result}")
         except NameError:
-            print(f"Pattern matching not available (Python < 3.10)")
+            print("Pattern matching not available (Python < 3.10)")
             break
 
     print("All tests completed!")

@@ -3,7 +3,7 @@
     "icon": "images/icon.png",
     "displayName": "Python Hover",
     "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -102,6 +102,16 @@
                 "command": "pythonHover.toggleTypeAwareHovers",
                 "title": "Toggle Type-Aware Hovers",
                 "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.reloadExtension",
+                "title": "Reload Extension (for priority testing)",
+                "category": "Python Hover"
+            },
+            {
+                "command": "pythonHover.testLambda",
+                "title": "Test Lambda Extraction (Debug)",
+                "category": "Python Hover"
             }
         ],
         "configuration": {
@@ -197,6 +207,16 @@
                     "default": true,
                     "description": "Map __dunder__ names to the Special Method Names section in the data model."
                 },
+                "pythonHover.prominentDisplay": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use prominent visual styling to make Python Hover documentation stand out among other hover providers."
+                },
+                "pythonHover.exclusiveMode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When enabled, attempt to be the primary hover provider for documented Python constructs (experimental)."
+                },
                 "pythonHover.offlineOnly": {
                     "type": "boolean",
                     "default": false,
@@ -290,6 +310,11 @@
                     "default": false,
                     "description": "Enable anonymous telemetry to help improve the extension. No personal data is collected."
                 },
+                "pythonHover.aggressiveHover": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show Python Hover documentation even when other extensions provide type information. When disabled, only shows when no other hover is available."
+                },
                 "pythonHover.cache.maxSize": {
                     "type": "number",
                     "default": 100,
@@ -309,25 +334,28 @@
         "menus": {}
     },
     "scripts": {
-        "compile": "tsc -p .",
-        "watch": "tsc -w -p .",
-        "vscode:prepublish": "npm run compile",
+        "compile": "node esbuild.js",
+        "compile-tsc": "tsc -p .",
+        "watch": "node esbuild.js --watch",
+        "watch-tsc": "tsc -w -p .",
+        "vscode:prepublish": "npm run compile -- --production",
         "package": "vsce package",
         "publish": "vsce publish",
-        "test": "node ./out/test/runTest.js"
+        "test": "npm run compile-tsc && node ./out/test/runTest.js"
     },
     "devDependencies": {
         "@types/mocha": "^10.0.10",
         "@types/node": "^20.5.1",
         "@types/vscode": "^1.90.0",
         "@vscode/vsce": "^3.6.0",
+        "esbuild": "^0.25.9",
         "glob": "^11.0.3",
         "mocha": "^11.7.1",
         "typescript": "^5.5.0"
     },
     "dependencies": {
         "@types/node-fetch": "^2.6.13",
-        "cheerio": "^1.0.0-rc.12",
+        "cheerio": "^1.1.2",
         "node-fetch": "^2.7.0"
     },
     "bundledDependencies": [

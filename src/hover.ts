@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getConfig } from './config';
 import { getContextualInfo } from './context';
-import { BUILTIN_KEYWORDS, DATA_TYPES, MAP } from './data/map';
+import { BUILTIN_KEYWORDS, DATA_TYPES, MAP, getDunderInfo } from './data/map';
 import { getSectionMarkdown } from './docs/sections';
 import { buildSpecialMethodsSection, getEnhancedExamples } from './examples';
 import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
@@ -39,11 +39,6 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                     // Log error for debugging but don't show to user
                     console.error('Hover provider error:', error);
 
-                    // Report error to telemetry
-                    const { TelemetryReporter } = await import('./telemetry');
-                    const telemetry = TelemetryReporter.getInstance();
-                    telemetry.reportError(error as Error, { word: currentWord, position });
-
                     // Return a fallback hover with basic information
                     try {
                         const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
@@ -75,11 +70,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
             return null;
         }
 
-        // Import telemetry after we know we have context
-        const { TelemetryReporter } = await import('./telemetry');
-        const telemetry = TelemetryReporter.getInstance();
-
-        const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget } = getConfig();
+        const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget, prominentDisplay } = getConfig();
 
         const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
         if (!range) return null;
@@ -117,9 +108,8 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
             }
         }
 
-        // Dunder mapping when enabled
+        // Dunder mapping when enabled - now with enhanced context
         if (!info && includeDunderMethods && /^__.*__$/.test(word)) {
-            const { getDunderInfo } = await import('./data/map');
             info = getDunderInfo(word);
         }
 
@@ -141,8 +131,8 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         const { CacheManager } = await import('./utils/cache');
         const cacheManager = CacheManager.getInstance();
 
-        const sessionHotKey = `hot:${pythonVersion}:${info.url}#${info.anchor}`;
-        const cacheKey = `pyDocs:v7:${pythonVersion}:${info.url}#${info.anchor}`;
+        const sessionHotKey = `hot:v8:${pythonVersion}:${info.url}#${info.anchor}`;
+        const cacheKey = `pyDocs:v8:${pythonVersion}:${info.url}#${info.anchor}`;
         const cached = context.globalState.get<{ ts: number; md: string }>(cacheKey);
         const now = Date.now();
         const freshMs = cacheDays * 24 * 60 * 60 * 1000;
@@ -336,14 +326,43 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         };
         const finalProcessed = transformLinksOutsideCode(finalBody);
 
+        // Create enhanced hover UI with better formatting
         const md = new vscode.MarkdownString();
         md.isTrusted = true;
         md.supportHtml = true;
-        md.appendMarkdown(finalProcessed);
 
-        // Report successful hover event
-        const responseTime = Date.now() - startTime;
-        telemetry.reportHoverEvent(word, true, undefined, responseTime);
+        // Build the enhanced hover content with title header
+        let enhancedContent = '';
+
+        // Add prominent title with emoji and better formatting
+        if (info.title) {
+            const titleEmoji = word.startsWith('__') ? '🔧' : BUILTIN_KEYWORDS.includes(word.toLowerCase()) ? '⚡' : '🐍';
+
+            if (prominentDisplay) {
+                // Clean, prominent styling without the "PYTHON DOCUMENTATION" label
+                enhancedContent += `---\n`;
+                enhancedContent += `## ${titleEmoji} **${info.title}**\n`;
+                enhancedContent += `---\n\n`;
+            } else {
+                // Standard prominent styling
+                enhancedContent += `# ${titleEmoji} ${info.title}\n\n`;
+            }
+        }
+
+        // Add the main content
+        enhancedContent += finalProcessed;
+
+        // Add enhanced footer with better styling
+        if (!enhancedContent.includes('📖 Open official docs')) {
+            enhancedContent += '\n\n---\n';
+            if (prominentDisplay) {
+                enhancedContent += `**📖 [➤ VIEW FULL PYTHON DOCUMENTATION](${fullUrl})**`;
+            } else {
+                enhancedContent += `*🔗 [View in Python Documentation](${fullUrl})*`;
+            }
+        }
+
+        md.appendMarkdown(enhancedContent);
 
         return new vscode.Hover(md, range);
     }

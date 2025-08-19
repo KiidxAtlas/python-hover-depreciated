@@ -20,6 +20,8 @@ export type HoverConfig = {
     summaryOnly: boolean;
     showSpecialMethodsSection: boolean;
     includeDunderMethods: boolean;
+    prominentDisplay: boolean;
+    exclusiveMode: boolean;
     offlineOnly: boolean;
     httpTimeoutMs: number;
     httpRetries: number;
@@ -80,6 +82,8 @@ export function getConfig(): HoverConfig {
         summaryOnly: cfg.get<boolean>('summaryOnly') ?? false,
         showSpecialMethodsSection: cfg.get<boolean>('showSpecialMethodsSection') ?? true,
         includeDunderMethods: cfg.get<boolean>('includeDunderMethods') ?? true,
+        prominentDisplay: cfg.get<boolean>('prominentDisplay') ?? true,
+        exclusiveMode: cfg.get<boolean>('exclusiveMode') ?? false,
         offlineOnly: cfg.get<boolean>('offlineOnly') ?? false,
         httpTimeoutMs,
         httpRetries,

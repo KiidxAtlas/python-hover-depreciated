@@ -1,5 +1,37 @@
 # Change Log
 
+## [2.2.0] - 2025-08-18
+
+### 🚀 Major Enhancements
+
+- **Enhanced Caching System**: Implemented LRU cache with disk persistence and TTL support
+- **Network Retry Logic**: Added exponential backoff HTTP client with smart error handling
+- **Progress Indicators**: Visual feedback for long-running documentation fetching operations
+- **Smart Suggestions**: Context-aware documentation recommendations based on imports and code patterns
+- **Comprehensive Testing**: Added 29+ unit tests covering type resolution, inventory, and context analysis
+- **JSDoc Documentation**: Complete API documentation for all core modules
+
+### 🛠️ Performance Improvements
+
+- **Cache Warming**: Automatic preloading of frequently used Python keywords
+- **Disk Persistence**: Cache survives VS Code restarts, reducing network requests
+- **Memory Management**: Configurable LRU cache with automatic cleanup
+- **Network Resilience**: Retry logic handles intermittent network failures gracefully
+
+### 🧪 Testing & Quality
+
+- **Unit Test Suite**: Comprehensive tests for typeResolver, inventory, and context modules
+- **Test Coverage**: 29+ test cases covering core functionality
+- **Error Handling**: Robust error boundaries and graceful degradation
+- **TypeScript Quality**: Full type safety and proper module exports
+
+### 🔧 Technical Improvements
+
+- **Modular Architecture**: Clean separation of concerns across utility modules
+- **Enhanced HTTP Client**: Configurable timeouts, retry logic, and error classification
+- **Progress Management**: Centralized progress tracking with status bar integration
+- **Smart Context Analysis**: Improved detection of Python patterns and suggestions
+
 ## [2.1.4] - 2025-08-17
 
 ### Improvements

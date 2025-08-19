@@ -20,3 +20,5 @@ out/extention.*
 
 python/**
 src/test/**
+IMPLEMENTATION_SUMMARY.md
+IMPROVEMENTS.md

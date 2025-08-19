@@ -3,6 +3,8 @@ import { getConfig } from './config';
 import { MAP } from './data/map';
 import { getSectionMarkdown } from './docs/sections';
 import { createHoverProvider } from './hover';
+import { CacheManager } from './utils/cache';
+import { HttpClient } from './utils/http';
 
 // MAP and constants moved to ./data/map
 
@@ -18,8 +20,40 @@ import { createHoverProvider } from './hover';
 // Rest of your existing functions (fetchText, htmlToMarkdown, etc.)
 // Fetch, HTML conversion, and section extraction moved to ./docs and ./utils
 
+/**
+ * Initialize enhanced systems for better performance and features
+ */
+async function initializeEnhancedSystems(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        // Initialize cache manager with disk persistence
+        const cacheManager = CacheManager.getInstance();
+        cacheManager.initialize(context);
+
+        // Initialize HTTP client with retry configuration
+        const httpClient = HttpClient.getInstance();
+        httpClient.updateFromConfig();
+
+        // Set up periodic cache cleanup
+        const cleanupInterval = setInterval(() => {
+            cacheManager.cleanupExpired();
+        }, 10 * 60 * 1000); // Every 10 minutes
+
+        context.subscriptions.push({
+            dispose: () => clearInterval(cleanupInterval)
+        });
+
+        console.log('Enhanced systems initialized successfully');
+    } catch (error) {
+        console.warn('Failed to initialize enhanced systems:', error);
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('Python Hover extension activated');
+
+    // Initialize enhanced systems
+    initializeEnhancedSystems(context);
+
     // Register commands
     const debugExtraction = vscode.commands.registerCommand('pythonHover.debugExtraction', async () => {
         const editor = vscode.window.activeTextEditor;

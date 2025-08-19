@@ -6,12 +6,83 @@ import { getSectionMarkdown } from './docs/sections';
 import { buildSpecialMethodsSection, getEnhancedExamples } from './examples';
 import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
 
-export const createHoverProvider = (context: vscode.ExtensionContext): vscode.HoverProvider => ({
-    async provideHover(doc, position) {
+/**
+ * Enhanced hover provider with error boundaries and debouncing
+ */
+class EnhancedHoverProvider implements vscode.HoverProvider {
+    private pendingRequests = new Map<string, NodeJS.Timeout>();
+    private readonly debounceMs = 50;
+
+    async provideHover(doc: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | null> {
+        const key = `${doc.uri.toString()}:${position.line}:${position.character}`;
+
+        // Cancel previous pending request for same position
+        const pending = this.pendingRequests.get(key);
+        if (pending) {
+            clearTimeout(pending);
+        }
+
+        // Debounce rapid hover requests
+        return new Promise((resolve) => {
+            const timeout = setTimeout(async () => {
+                this.pendingRequests.delete(key);
+                let currentWord = '';
+                try {
+                    const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
+                    if (range) {
+                        currentWord = doc.getText(range);
+                    }
+
+                    const result = await this.doProvideHover(doc, position);
+                    resolve(result);
+                } catch (error) {
+                    // Log error for debugging but don't show to user
+                    console.error('Hover provider error:', error);
+
+                    // Report error to telemetry
+                    const { TelemetryReporter } = await import('./telemetry');
+                    const telemetry = TelemetryReporter.getInstance();
+                    telemetry.reportError(error as Error, { word: currentWord, position });
+
+                    // Return a fallback hover with basic information
+                    try {
+                        const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
+                        if (range) {
+                            const word = doc.getText(range);
+                            const fallbackMsg = new vscode.MarkdownString('Documentation temporarily unavailable. Try again in a moment.');
+                            fallbackMsg.isTrusted = true;
+                            resolve(new vscode.Hover(fallbackMsg, range));
+                        } else {
+                            resolve(null);
+                        }
+                    } catch {
+                        resolve(null);
+                    }
+                }
+            }, this.debounceMs);
+
+            this.pendingRequests.set(key, timeout);
+        });
+    }
+
+    private async doProvideHover(doc: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | null> {
+        const startTime = Date.now();
+
+        // Get the extension context from the global state (we'll need to pass this in)
+        const context = (globalThis as any).__pythonHoverContext as vscode.ExtensionContext;
+        if (!context) {
+            console.warn('Extension context not available for hover provider');
+            return null;
+        }
+
+        // Import telemetry after we know we have context
+        const { TelemetryReporter } = await import('./telemetry');
+        const telemetry = TelemetryReporter.getInstance();
+
         const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget } = getConfig();
 
         const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
-        if (!range) return;
+        if (!range) return null;
 
         const word = doc.getText(range);
         let info: { title: string; url: string; anchor: string } | undefined;
@@ -54,28 +125,23 @@ export const createHoverProvider = (context: vscode.ExtensionContext): vscode.Ho
 
         const lower = word.toLowerCase();
         // Preserve original behavior: includeBuiltins=false hides built-ins AND data types
-        if (!includeBuiltins && (BUILTIN_KEYWORDS.includes(lower) || DATA_TYPES.includes(lower))) return;
+        if (!includeBuiltins && (BUILTIN_KEYWORDS.includes(lower) || DATA_TYPES.includes(lower))) return null;
         // Additional control: when built-ins are included, allow separately hiding data types
-        if (includeBuiltins && !includeDataTypes && DATA_TYPES.includes(lower)) return;
-        if (!includeConstants && ['None', 'True', 'False'].includes(word)) return;
+        if (includeBuiltins && !includeDataTypes && DATA_TYPES.includes(lower)) return null;
+        if (!includeConstants && ['None', 'True', 'False'].includes(word)) return null;
         // Allow hiding exceptions via config
-        if (!includeExceptions && ['Exception', 'BaseException', 'ValueError', 'TypeError', 'KeyError', 'IndexError', 'StopIteration'].includes(word)) return;
+        if (!includeExceptions && ['Exception', 'BaseException', 'ValueError', 'TypeError', 'KeyError', 'IndexError', 'StopIteration'].includes(word)) return null;
 
-        if (!info) return;
+        if (!info) return null;
 
         const { getDocsBaseUrl } = await import('./config');
         const baseUrl = getDocsBaseUrl();
 
-        // Small session-level hot cache to avoid repeated roundtrips and conversions
-        const sessionHotKey = `hot:${pythonVersion}:${info.url}#${info.anchor}`;
-        // Simple LRU-like session cache with cap to protect memory
-        const HOT_CAP = 200;
-        let hotCache = (globalThis as any).__pyHoverHotCache as Map<string, { ts: number; md: string }> | undefined;
-        if (!hotCache) {
-            hotCache = new Map();
-            (globalThis as any).__pyHoverHotCache = hotCache;
-        }
+        // Use enhanced cache manager instead of global session cache
+        const { CacheManager } = await import('./utils/cache');
+        const cacheManager = CacheManager.getInstance();
 
+        const sessionHotKey = `hot:${pythonVersion}:${info.url}#${info.anchor}`;
         const cacheKey = `pyDocs:v7:${pythonVersion}:${info.url}#${info.anchor}`;
         const cached = context.globalState.get<{ ts: number; md: string }>(cacheKey);
         const now = Date.now();
@@ -85,8 +151,8 @@ export const createHoverProvider = (context: vscode.ExtensionContext): vscode.Ho
         if (cached && (now - cached.ts) < freshMs) mdBody = cached.md;
 
         // Check hot in-memory cache next (very fast)
-        const hot = hotCache.get(sessionHotKey);
-        if (!mdBody && hot && (now - hot.ts) < Math.min(freshMs, 1000 * 60 * 10)) {
+        const hot = cacheManager.get<{ md: string }>(sessionHotKey);
+        if (!mdBody && hot) {
             mdBody = hot.md;
         }
 
@@ -100,13 +166,10 @@ export const createHoverProvider = (context: vscode.ExtensionContext): vscode.Ho
             try {
                 mdBody = await getSectionMarkdown(baseUrl, info.url, info.anchor);
                 await context.globalState.update(cacheKey, { ts: now, md: mdBody });
+
+                // Store in enhanced cache manager with 10 minute TTL
                 try {
-                    if (hotCache.size >= HOT_CAP) {
-                        // drop oldest entry
-                        const firstKey = hotCache.keys().next().value as string | undefined;
-                        if (firstKey) hotCache.delete(firstKey);
-                    }
-                    hotCache.set(sessionHotKey, { ts: now, md: mdBody });
+                    cacheManager.set(sessionHotKey, { md: mdBody }, 1000 * 60 * 10);
                 } catch { }
             } catch (error) {
                 mdBody = '';
@@ -277,6 +340,31 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         md.isTrusted = true;
         md.supportHtml = true;
         md.appendMarkdown(finalProcessed);
+
+        // Report successful hover event
+        const responseTime = Date.now() - startTime;
+        telemetry.reportHoverEvent(word, true, undefined, responseTime);
+
         return new vscode.Hover(md, range);
     }
-});
+
+    /**
+     * Cleanup method to clear pending requests
+     */
+    dispose(): void {
+        for (const timeout of this.pendingRequests.values()) {
+            clearTimeout(timeout);
+        }
+        this.pendingRequests.clear();
+    }
+}
+
+/**
+ * Create the enhanced hover provider with error handling and debouncing
+ */
+export const createHoverProvider = (context: vscode.ExtensionContext): vscode.HoverProvider => {
+    // Store context globally so the hover provider can access it
+    (globalThis as any).__pythonHoverContext = context;
+
+    return new EnhancedHoverProvider();
+};

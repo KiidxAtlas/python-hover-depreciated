@@ -159,33 +159,60 @@ export function htmlToMarkdown(html: string, baseUrl: string): string {
         try {
             const baseForResolve = baseUrl && baseUrl.includes('://') ? baseUrl : (baseUrl.endsWith('/') ? baseUrl : baseUrl + '/');
             if (!href) return strip(text);
+
+            let processedHref = href;
+
+            // Extract version from baseUrl for consistent version handling
+            const versionMatch = baseUrl.match(/docs\.python\.org\/(\d+(?:\.\d+)?)/i);
+            const ver = versionMatch ? versionMatch[1] : '3';
+
+            // Fix versioned paths like "13/reference/expressions"
+            if (/^\d+(?:\.\d+)?\//.test(processedHref)) {
+                processedHref = processedHref.replace(/^\d+(?:\.\d+)?\//, '');
+                processedHref = `https://docs.python.org/${ver}/${processedHref}`;
+            }
             // Normalize whitespace-split docs URLs like "https://docs. 3.13/reference/..."
-            try {
-                const versionMatch = baseUrl.match(/docs\.python\.org\/(\d+(?:\.\d+)?)/i);
-                const ver = versionMatch ? versionMatch[1] : '3';
-                const m = (href as string).match(/^https:\/\/docs\.(?:python\.org\/)?\s+((?:\d+(?:\.\d+)?\/)?[\w\-\/\.\#]+)/i);
-                if (m) {
-                    const tail = String(m[1]).replace(/^\d+(?:\.\d+)?\//, '');
-                    href = `https://docs.python.org/${ver}/${tail}`;
-                }
-            } catch { /* ignore */ }
-            // If it's a fragment-only link (#anchor), resolve against the page URL
-            if (href.startsWith('#')) {
+            else {
                 try {
-                    const resolvedFrag = new URL(href, baseForResolve).toString();
+                    const m = (processedHref as string).match(/^https:\/\/docs\.(?:python\.org\/)?\s+((?:\d+(?:\.\d+)?\/)?[\w\-\/\.\#]+)/i);
+                    if (m) {
+                        const tail = String(m[1]).replace(/^\d+(?:\.\d+)?\//, '');
+                        processedHref = `https://docs.python.org/${ver}/${tail}`;
+                    }
+                } catch { /* ignore */ }
+            }
+
+            // If it's a fragment-only link (#anchor), resolve against the page URL
+            if (processedHref.startsWith('#')) {
+                try {
+                    const resolvedFrag = new URL(processedHref, baseForResolve).toString();
                     return `[${strip(text)}](${resolvedFrag})`;
                 } catch { return strip(text); }
             }
-            // resolve relative hrefs against the page/base URL using the URL constructor
-            let resolved: string;
-            try {
-                const hrefWithAnchor = anchor ? `${href}#${anchor}` : href;
-                resolved = new URL(hrefWithAnchor, baseForResolve).toString();
-            } catch {
-                if (href.startsWith('http')) resolved = anchor ? `${href}#${anchor}` : href;
-                else resolved = (baseForResolve.replace(/\/$/, '') + '/' + href.replace(/^\//, '')) + (anchor ? `#${anchor}` : '');
+
+            // Handle relative paths
+            if (processedHref.startsWith('../')) {
+                try {
+                    processedHref = new URL(processedHref, baseForResolve).toString();
+                } catch {
+                    // Fallback for relative path resolution
+                    processedHref = baseForResolve.replace(/\/[^\/]*$/, '/') + processedHref.replace(/^\.\.\//, '');
+                }
             }
-            return `[${strip(text)}](${resolved})`;
+            // Handle absolute paths without protocol
+            else if (!processedHref.startsWith('http') && !processedHref.startsWith('#')) {
+                try {
+                    processedHref = new URL(processedHref, baseForResolve).toString();
+                } catch {
+                    processedHref = (baseForResolve.replace(/\/$/, '') + '/' + processedHref.replace(/^\//, ''));
+                }
+            }
+
+            // Add anchor if present
+            const finalHref = anchor ? `${processedHref}#${anchor}` : processedHref;
+
+            const processedContent = strip(text);
+            return processedContent ? `[${processedContent}](${finalHref})` : '';
         } catch (e) {
             return strip(text);
         }

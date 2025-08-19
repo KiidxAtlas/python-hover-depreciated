@@ -2,17 +2,25 @@ import * as vscode from 'vscode';
 import { MAP } from './data/map';
 import { Info } from './types';
 
-// Best-effort type resolver without LS integration.
-// Heuristics:
-// - obj = ClassName(...)
-// - obj: ClassName
-// - for strings: obj = "...", f"...", r"..."
-// - lists: obj = [ ... ]
-// - dicts: obj = { ... }
-// - sets: obj = {1,2} (ambiguous vs dict; we default to dict when unknown)
-// - tuple: obj = (..., ...)
-// Returns an Info pointing to the type page, and if attribute/method is provided, tries to anchor to that method section if stdtypes has a fragment.
+/**
+ * Best-effort type resolver without Language Server integration.
+ *
+ * This module provides heuristic-based type resolution for Python code by analyzing:
+ * - Variable assignments: `obj = ClassName(...)`
+ * - Type annotations: `obj: ClassName`
+ * - String literals: `obj = "..."`, `f"..."`, `r"..."`
+ * - Collection literals: `obj = [...]`, `obj = {...}`, `obj = (...)`
+ *
+ * Returns an Info object pointing to the appropriate documentation page,
+ * and attempts to anchor to specific method sections when available.
+ *
+ * @author Python Hover Extension
+ * @since 2.1.7
+ */
 
+/**
+ * Mapping of Python built-in type names to their corresponding MAP keys
+ */
 const TYPE_KEYWORDS: Record<string, keyof typeof MAP> = {
     'str': 'str',
     'list': 'list',
@@ -24,6 +32,25 @@ const TYPE_KEYWORDS: Record<string, keyof typeof MAP> = {
     'bool': 'bool'
 };
 
+/**
+ * Resolves type information for an attribute or method access pattern.
+ *
+ * Analyzes the document backwards from the current position to find type
+ * information for the receiver object, then maps it to appropriate documentation.
+ *
+ * @param doc - The VS Code text document being analyzed
+ * @param position - Current cursor position in the document
+ * @param receiverName - Name of the object whose attribute/method is being accessed
+ * @param memberName - Name of the attribute or method being accessed
+ * @returns Promise resolving to Info object with documentation details, or undefined if not resolvable
+ *
+ * @example
+ * ```typescript
+ * // For code: `my_string.upper()` where my_string was assigned as `my_string = "hello"`
+ * const info = await resolveTypeInfoForAttribute(doc, pos, 'my_string', 'upper');
+ * // Returns info pointing to str.upper documentation
+ * ```
+ */
 export async function resolveTypeInfoForAttribute(doc: vscode.TextDocument, position: vscode.Position, receiverName: string, memberName: string): Promise<Info | undefined> {
     try {
         // Look back a limited window for simple assignments/annotations
@@ -68,6 +95,19 @@ export async function resolveTypeInfoForAttribute(doc: vscode.TextDocument, posi
     return undefined;
 }
 
+/**
+ * Maps a type name to its corresponding Info object with method anchor.
+ *
+ * @param t - The type name to map (e.g., 'str', 'list', 'dict')
+ * @param memberName - The member name to create an anchor for
+ * @returns Info object with documentation details, or undefined if type is unknown
+ *
+ * @example
+ * ```typescript
+ * const info = typeToInfo('str', 'upper');
+ * // Returns info for str.upper method
+ * ```
+ */
 function typeToInfo(t: string, memberName: string): Info | undefined {
     const l = t.toLowerCase();
     if (TYPE_KEYWORDS[l]) return methodAnchorFromStdType(TYPE_KEYWORDS[l], memberName);
@@ -75,6 +115,23 @@ function typeToInfo(t: string, memberName: string): Info | undefined {
     return undefined;
 }
 
+/**
+ * Creates an Info object for a standard type method with proper anchoring.
+ *
+ * Maps built-in types to their documentation pages and creates appropriate
+ * anchors for specific methods. Standard types like str, list, dict, etc.
+ * are mapped to the stdtypes.html page with method-specific anchors.
+ *
+ * @param kind - The type kind from the MAP (e.g., 'str', 'list')
+ * @param memberName - The method or attribute name
+ * @returns Info object with title, URL, and anchor, or undefined if type not found
+ *
+ * @example
+ * ```typescript
+ * const info = methodAnchorFromStdType('str', 'split');
+ * // Returns: { title: "str.split — Text Sequence Type", url: "library/stdtypes.html", anchor: "str.split" }
+ * ```
+ */
 function methodAnchorFromStdType(kind: keyof typeof MAP, memberName: string): Info | undefined {
     const base = MAP[kind];
     if (!base) return undefined;
@@ -86,6 +143,24 @@ function methodAnchorFromStdType(kind: keyof typeof MAP, memberName: string): In
     return { title: `${kind}.${memberName} — ${base.title}`, url, anchor };
 }
 
+/**
+ * Generates a standard type method anchor string.
+ *
+ * Creates anchor strings for standard library type methods following
+ * the Python documentation conventions (e.g., 'str.join', 'list.append').
+ * Special handling for dunder methods which are anchored to object methods.
+ *
+ * @param kind - The type name (e.g., 'str', 'list')
+ * @param member - The method name (may include call parentheses)
+ * @returns Anchor string for the documentation, or undefined for unhandled cases
+ *
+ * @example
+ * ```typescript
+ * stdTypeMethodAnchor('str', 'join');    // Returns: "str.join"
+ * stdTypeMethodAnchor('list', 'append'); // Returns: "list.append"
+ * stdTypeMethodAnchor('str', '__len__'); // Returns: "object.__len__"
+ * ```
+ */
 function stdTypeMethodAnchor(kind: string, member: string): string | undefined {
     // Common anchors for stdtypes methods are like 'str.join', 'list.append', 'dict.get', etc.
     // Guard against dunder here; dunder methods go to datamodel handled elsewhere.
@@ -96,6 +171,12 @@ function stdTypeMethodAnchor(kind: string, member: string): string | undefined {
     return `${k}.${m}`;
 }
 
+/**
+ * Escapes special regex characters in a string.
+ *
+ * @param s - The string to escape
+ * @returns The escaped string safe for use in regular expressions
+ */
 function escapeRegExp(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

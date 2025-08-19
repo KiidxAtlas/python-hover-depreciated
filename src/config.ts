@@ -42,14 +42,32 @@ export type HoverConfig = {
 
 export function getConfig(): HoverConfig {
     const cfg = vscode.workspace.getConfiguration('pythonHover');
+
+    // Validate and sanitize configuration values
+    const pythonVersion = cfg.get<string>('pythonVersion') || '3';
+    const validatedVersion = /^\d+(?:\.\d+)?$/.test(pythonVersion.trim()) ? pythonVersion.trim() : '3';
+
+    const docsLocale = cfg.get<string>('docsLocale') || 'en';
+    const validatedLocale = /^[a-z]{2}(?:_[A-Z]{2})?$/.test(docsLocale.trim()) ? docsLocale.trim() : 'en';
+
+    const cacheDays = Math.max(1, Math.min(365, cfg.get<number>('cacheDays') ?? 7));
+    const maxContentLength = Math.max(0, cfg.get<number>('maxContentLength') ?? 1500);
+    const httpTimeoutMs = Math.max(1000, Math.min(30000, cfg.get<number>('httpTimeoutMs') ?? 6000));
+    const httpRetries = Math.max(0, Math.min(5, cfg.get<number>('httpRetries') ?? 1));
+    const limitGrammarLines = Math.max(1, Math.min(30, cfg.get<number>('limitGrammarLines') ?? 8));
+    const grammarMaxChars = Math.max(100, Math.min(3000, cfg.get<number>('grammarMaxChars') ?? 600));
+
+    const openTarget = cfg.get<'auto' | 'editor' | 'external'>('openTarget') || 'auto';
+    const validatedOpenTarget = ['auto', 'editor', 'external'].includes(openTarget) ? openTarget : 'auto';
+
     return {
         useDomParser: cfg.get<boolean>('useDomParser') ?? true,
-        openTarget: (cfg.get<'auto' | 'editor' | 'external'>('openTarget') || 'auto'),
-        pythonVersion: (cfg.get<string>('pythonVersion') || '3').trim(),
-        docsLocale: (cfg.get<string>('docsLocale') || 'en').trim(),
-        cacheDays: cfg.get<number>('cacheDays') ?? 7,
+        openTarget: validatedOpenTarget as 'auto' | 'editor' | 'external',
+        pythonVersion: validatedVersion,
+        docsLocale: validatedLocale,
+        cacheDays,
         showExamples: cfg.get<boolean>('showExamples') ?? true,
-        maxContentLength: cfg.get<number>('maxContentLength') ?? 1500,
+        maxContentLength,
         includeBuiltins: cfg.get<boolean>('includeBuiltins') ?? true,
         contextAware: cfg.get<boolean>('contextAware') ?? true,
         typeAwareHovers: cfg.get<boolean>('typeAwareHovers') ?? true,
@@ -63,19 +81,17 @@ export function getConfig(): HoverConfig {
         showSpecialMethodsSection: cfg.get<boolean>('showSpecialMethodsSection') ?? true,
         includeDunderMethods: cfg.get<boolean>('includeDunderMethods') ?? true,
         offlineOnly: cfg.get<boolean>('offlineOnly') ?? false,
-        httpTimeoutMs: cfg.get<number>('httpTimeoutMs') ?? 6000,
-        httpRetries: cfg.get<number>('httpRetries') ?? 1,
+        httpTimeoutMs,
+        httpRetries,
         showActionLinks: cfg.get<boolean>('showActionLinks') ?? true,
-        // indexing removed
         autoLinkPeps: cfg.get<boolean>('autoLinkPeps') ?? true,
         fixStandardTypeHierarchyLink: cfg.get<boolean>('fixStandardTypeHierarchyLink') ?? true,
         repairTruncatedDocLinks: cfg.get<boolean>('repairTruncatedDocLinks') ?? true,
-        // indexing removed
         exportIncludeMetadata: cfg.get<boolean>('exportIncludeMetadata') ?? true,
         showKeyPoints: cfg.get<boolean>('showKeyPoints') ?? true,
         showTinyExample: cfg.get<boolean>('showTinyExample') ?? true,
-        limitGrammarLines: cfg.get<number>('limitGrammarLines') ?? 8,
-        grammarMaxChars: cfg.get<number>('grammarMaxChars') ?? 600,
+        limitGrammarLines,
+        grammarMaxChars,
         showActionsInsertTemplates: cfg.get<boolean>('showActions.insertTemplates') ?? false,
     };
 }

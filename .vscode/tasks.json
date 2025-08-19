@@ -1,113 +1,29 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "npm",
-			"script": "compile",
-			"problemMatcher": "$tsc",
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"label": "npm: compile"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		},
-		{
-			"label": "build: compile ts",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"compile"
-			],
-			"isBackground": false,
-			"problemMatcher": [
-				"$tsc"
-			],
-			"group": "build"
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "compile",
+            "problemMatcher": "$tsc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "npm: compile"
+        },
+        {
+            "label": "build: compile ts",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "compile"
+            ],
+            "isBackground": false,
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "group": "build"
+        }
+    ]
 }

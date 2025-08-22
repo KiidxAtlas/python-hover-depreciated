@@ -26,13 +26,19 @@ export type HoverConfig = {
     httpTimeoutMs: number;
     httpRetries: number;
     showActionLinks: boolean;
-    // dynamic indexing removed
+    // Enhanced features
+    includeStringMethods: boolean;
+    includeListMethods: boolean;
+    includeDictMethods: boolean;
+    includeSetMethods: boolean;
+    includeModuleInfo: boolean;
+    showSignatures: boolean;
+    enhancedMethodResolution: boolean;
+    showPracticalExamples: boolean;
     // Link/markdown customization
     autoLinkPeps?: boolean;
     fixStandardTypeHierarchyLink?: boolean;
     repairTruncatedDocLinks?: boolean;
-    // Indexing sources customization
-    // index sources removed
     // Export customization
     exportIncludeMetadata?: boolean;
     showKeyPoints?: boolean;
@@ -97,6 +103,15 @@ export function getConfig(): HoverConfig {
         limitGrammarLines,
         grammarMaxChars,
         showActionsInsertTemplates: cfg.get<boolean>('showActions.insertTemplates') ?? false,
+        // Enhanced features
+        includeStringMethods: cfg.get<boolean>('includeStringMethods') ?? true,
+        includeListMethods: cfg.get<boolean>('includeListMethods') ?? true,
+        includeDictMethods: cfg.get<boolean>('includeDictMethods') ?? true,
+        includeSetMethods: cfg.get<boolean>('includeSetMethods') ?? true,
+        includeModuleInfo: cfg.get<boolean>('includeModuleInfo') ?? true,
+        showSignatures: cfg.get<boolean>('showSignatures') ?? true,
+        enhancedMethodResolution: cfg.get<boolean>('enhancedMethodResolution') ?? true,
+        showPracticalExamples: cfg.get<boolean>('showPracticalExamples') ?? true,
     };
 }
 

@@ -4,6 +4,8 @@ import { getContextualInfo } from './context';
 import { BUILTIN_KEYWORDS, DATA_TYPES, MAP, getDunderInfo } from './data/map';
 import { getSectionMarkdown } from './docs/sections';
 import { buildSpecialMethodsSection, getEnhancedExamples } from './examples';
+import { getMethodExample, isKnownMethod, resolveMethodInfo } from './features/methodResolver';
+import { resolveImportInfo } from './typeResolver';
 import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
 
 /**
@@ -70,7 +72,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
             return null;
         }
 
-        const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget, prominentDisplay } = getConfig();
+        const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget, prominentDisplay, includeStringMethods, includeListMethods, includeDictMethods, includeSetMethods, includeModuleInfo, showSignatures, enhancedMethodResolution, showPracticalExamples } = getConfig();
 
         const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
         if (!range) return null;
@@ -78,9 +80,38 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         const word = doc.getText(range);
         let info: { title: string; url: string; anchor: string } | undefined;
 
+        // Enhanced method resolution - check for method calls first
+        if (enhancedMethodResolution && isKnownMethod(word)) {
+            // Check if this is a method call (has a dot before it)
+            const lineText = doc.lineAt(position.line).text;
+            const beforeWord = lineText.substring(0, range.start.character);
+            const dotMatch = beforeWord.match(/(\w+)\s*\.\s*$/);
+
+            if (dotMatch) {
+                const receiverName = dotMatch[1];
+                // Check method inclusion settings
+                const methodInfo = resolveMethodInfo(doc, position, word, undefined);
+                if (methodInfo) {
+                    const methodTypes = ['string', 'list', 'dict', 'set'];
+                    const includeFlags = [includeStringMethods, includeListMethods, includeDictMethods, includeSetMethods];
+
+                    // For now, allow all if any are enabled
+                    if (includeFlags.some(flag => flag)) {
+                        info = methodInfo;
+                    }
+                }
+            }
+        }
+
+        // Check for import statements
+        if (!info && includeModuleInfo) {
+            const importInfo = resolveImportInfo(doc, position, word);
+            if (importInfo) info = importInfo;
+        }
+
         // Use context-aware mapping when enabled; otherwise fall back to static map
-        if (contextAware) info = getContextualInfo(doc, position, word);
-        else info = MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
+        if (!info && contextAware) info = getContextualInfo(doc, position, word);
+        if (!info) info = MAP[word as keyof typeof MAP] || MAP[word.toLowerCase()];
 
         // Type-aware attribute/method: obj.attr or obj.method(); best-effort mapping to stdtypes
         let usedTypeAware = false;
@@ -242,7 +273,14 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         }
         // Show examples when enabled OR when the symbol is a core syntax element we always want examples for
         if (!summaryOnly && (showExamples || MUST_SHOW_EXAMPLES.includes(lower))) {
-            examplesBody = getEnhancedExamples(word, baseUrl, doc, position) || '';
+            if (showPracticalExamples) {
+                examplesBody = getEnhancedExamples(word, baseUrl, doc, position) || '';
+            } else {
+                // Fallback to method-specific examples
+                if (enhancedMethodResolution && isKnownMethod(word)) {
+                    examplesBody = getMethodExample(word) || '';
+                }
+            }
         }
 
         const fullUrl = `${baseUrl}/${info.url}#${info.anchor}`;

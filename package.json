@@ -2,8 +2,8 @@
     "name": "python-hover",
     "icon": "images/icon.png",
     "displayName": "Python Hover",
-    "description": "Rich hover documentation for Python keywords (class, def, try, etc.) with live content from docs.python.org",
-    "version": "2.3.0",
+    "description": "Comprehensive Python hover documentation with 300+ built-ins, methods, type hints, examples, and import support",
+    "version": "2.4.0",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -25,7 +25,12 @@
         "python",
         "documentation",
         "hover",
-        "intellisense"
+        "intellisense",
+        "type-hints",
+        "built-ins",
+        "methods",
+        "examples",
+        "import-support"
     ],
     "activationEvents": [
         "onLanguage:python"
@@ -328,6 +333,46 @@
                     "minimum": 0,
                     "maximum": 500,
                     "description": "Debounce time in milliseconds for hover requests to improve performance."
+                },
+                "pythonHover.includeStringMethods": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include string method documentation (strip, split, join, etc.) in hover tooltips."
+                },
+                "pythonHover.includeListMethods": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include list method documentation (append, extend, pop, etc.) in hover tooltips."
+                },
+                "pythonHover.includeDictMethods": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include dictionary method documentation (keys, values, items, etc.) in hover tooltips."
+                },
+                "pythonHover.includeSetMethods": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include set method documentation (add, union, intersection, etc.) in hover tooltips."
+                },
+                "pythonHover.includeModuleInfo": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include module information for import statements in hover tooltips."
+                },
+                "pythonHover.showSignatures": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show function signatures and type hints in hover documentation."
+                },
+                "pythonHover.enhancedMethodResolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable enhanced method resolution that detects types from assignments and provides context-aware method documentation."
+                },
+                "pythonHover.showPracticalExamples": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show practical code examples with type hints and best practices."
                 }
             }
         },

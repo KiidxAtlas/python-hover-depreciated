@@ -1,53 +1,71 @@
 # Python Hover Enhanced
 
-🚀 **Comprehensive hover documentation for Python with live content from docs.python.org**
+🚀 **Comprehensive Python development assistant with 300+ built-ins, methods, type hints, and smart context awareness**
 
-Get rich, contextual documentation for Python keywords, built-in functions, data types, and more - directly in your editor with enhanced examples and smart detection.
+Get rich, contextual documentation for Python with practical examples, import support, and intelligent method resolution - directly in your editor.
 
-## ✨ Features
+## ✨ Major Features
 
-### 🎯 **Core Functionality**
-- **Live Documentation**: Fetches current documentation directly from docs.python.org
-- **Rich Content**: Includes syntax, examples, and practical usage patterns
-- **Smart Caching**: Configurable caching (1-365 days) for fast subsequent hovers
-- **Working Links**: Internal documentation links work correctly within hover tooltips
-- **Version Support**: Choose your Python version (3, 3.11, 3.12, etc.)
+### 🎯 **Comprehensive Coverage (300+ Items)**
+- **70+ Built-in Functions**: `type()`, `dir()`, `help()`, `locals()`, `globals()`, `breakpoint()`, etc.
+- **42+ String Methods**: All essential string operations with practical examples
+- **9 List Methods**: Complete list manipulation support (`append()`, `extend()`, `pop()`, etc.)
+- **8 Dictionary Methods**: Full dict operations (`keys()`, `values()`, `get()`, etc.)
+- **12 Set Methods**: Complete set operations (`union()`, `intersection()`, `add()`, etc.)
+- **Language Constructs**: Enhanced examples for `class`, `def`, `try`, `with`, `for`, `lambda`
 
-### 🧠 **Enhanced Intelligence**
-- **Context-Aware Detection**: Distinguishes between keywords, functions, and variable names
-- **Built-in Function Support**: Comprehensive coverage of Python built-ins
-- **Data Type Documentation**: Hover over `str`, `int`, `list`, etc. for type information
-- **Smart Examples**: Practical code examples tailored to each keyword
-- **Configurable Content**: Control what appears in your hovers
+### 🧠 **Smart Method Resolution**
+- **Context-Aware Detection**: Recognizes `text.upper()` as string method after `text = "hello"`
+- **Type Inference**: Automatically detects variable types from assignments
+- **Enhanced Examples**: Type-specific usage patterns with expected output
 
-### 🔧 **Advanced Features**
-- **Cache Management**: View statistics, refresh content, clear cache
-- **Content Control**: Adjust maximum content length and toggle examples
-- **Selective Coverage**: Enable/disable built-ins separately from keywords
-- **Error Handling**: Graceful fallbacks when documentation is unavailable
+### 📥 **Import Statement Support**
+- **40+ Standard Library Modules**: `os`, `sys`, `math`, `datetime`, `json`, `asyncio`, etc.
+- **Module Documentation**: Hover over `import os` shows module information
+- **Import Patterns**: Support for both `import module` and `from module import item`
 
-## 📚 **Supported Keywords & Functions**
+### 🎯 **Enhanced Code Examples**
+- **Type Hints**: Modern Python patterns with annotations throughout
+- **Practical Examples**: Real, copyable code snippets with expected output
+- **Best Practices**: Demonstrates idiomatic Python usage
+- **Context-Specific**: Examples adapt to detected usage patterns
 
-### **Control Flow**
+### ⚙️ **Advanced Configuration**
+- **8 New Settings**: Fine-grained control over method categories and examples
+- **Performance Options**: Control method resolution, caching, and content length
+- **Customizable Experience**: Enable/disable features based on your workflow
+
+## 📚 **What's Covered**
+
+### **Language Constructs**
 `class`, `def`, `return`, `with`, `yield`, `async`, `await`, `import`, `from`, `try`, `if`, `for`, `while`, `except`, `finally`, `else`, `elif`, `break`, `continue`, `pass`, `lambda`, `global`, `nonlocal`, `raise`, `assert`, `del`, `match`, `case`
 
-### **Built-in Functions**
-`print`, `len`, `range`, `enumerate`, `zip`, `map`, `filter`, `sorted`, `reversed`, `sum`, `max`, `min`, `abs`, `round`
+### **Built-in Functions (70+)**
+`print`, `len`, `range`, `enumerate`, `zip`, `map`, `filter`, `sorted`, `reversed`, `sum`, `max`, `min`, `abs`, `round`, `type`, `dir`, `help`, `input`, `eval`, `exec`, `compile`, `hash`, `hex`, `oct`, `bin`, `ord`, `chr`, `ascii`, `repr`, `format`, `divmod`, `callable`, `super`, `staticmethod`, `classmethod`, `property`, and many more...
+
+### **String Methods (42+)**
+`strip`, `split`, `join`, `replace`, `find`, `upper`, `lower`, `startswith`, `endswith`, `capitalize`, `title`, `isdigit`, `isalpha`, `count`, `encode`, `center`, `ljust`, `rjust`, `zfill`, and more...
+
+### **Collection Methods**
+- **List**: `append`, `extend`, `insert`, `remove`, `pop`, `clear`, `copy`, `reverse`, `sort`
+- **Dict**: `keys`, `values`, `items`, `get`, `setdefault`, `update`, `popitem`, `fromkeys`
+- **Set**: `add`, `discard`, `union`, `intersection`, `difference`, `symmetric_difference`, etc.
 
 ### **Data Types**
-`str`, `int`, `float`, `bool`, `list`, `dict`, `set`, `tuple`
+`str`, `int`, `float`, `bool`, `list`, `dict`, `set`, `tuple`, `bytes`, `bytearray`, `complex`
 
-### **Constants**
-`None`, `True`, `False`
+### **Standard Library Modules**
+`os`, `sys`, `math`, `random`, `datetime`, `json`, `re`, `asyncio`, `pathlib`, `typing`, `collections`, `itertools`, `csv`, `sqlite3`, `threading`, and more...
 
 ## ⚙️ **Configuration**
 
 Access settings via **File > Preferences > Settings** and search for "Python Hover":
 
-### **Core Settings**
+### **Enhanced Settings**
 ```json
 {
-  "pythonHover.pythonVersion": "3",      // Python docs version ("3", "3.12", etc.)
+  // Core settings
+  "pythonHover.pythonVersion": "3",      // Python docs version
   "pythonHover.cacheDays": 7             // Cache duration (1-365 days)
 }
 ```

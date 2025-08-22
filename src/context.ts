@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { BUILTIN_KEYWORDS, DATA_TYPES, getDunderInfo, MAP } from './data/map';
+import { isKnownMethod, resolveMethodInfo } from './features/methodResolver';
+import { resolveImportInfo } from './typeResolver';
 import { Info } from './types';
 
 /**
@@ -11,6 +13,21 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
     const beforeWord = line.substring(0, position.character);
     const afterWord = line.substring(position.character + word.length);
     const fullLine = line.trim();
+
+    // Check for import statements first
+    const importInfo = resolveImportInfo(doc, position, word);
+    if (importInfo) return importInfo;
+
+    // Check for method calls on built-in types
+    if (isKnownMethod(word)) {
+        // Try to determine the receiver type from context
+        const dotMatch = beforeWord.match(/(\w+)\s*\.\s*$/);
+        if (dotMatch) {
+            const receiverName = dotMatch[1];
+            const methodInfo = resolveMethodInfo(doc, position, word, undefined);
+            if (methodInfo) return methodInfo;
+        }
+    }
 
     // Handle dunder methods with enhanced context
     if (/^__.*__$/.test(word)) {
@@ -74,6 +91,37 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
     // F-string detection
     if (word === 'f' && /^["']/.test(afterWord.trim())) {
         return MAP['f-string'];
+    }
+
+    // Enhanced exception handling context
+    if (['except', 'finally', 'raise'].includes(word)) {
+        // Check if we're in a try block context
+        const linesBefore = [];
+        for (let i = Math.max(0, position.line - 10); i < position.line; i++) {
+            linesBefore.push(doc.lineAt(i).text);
+        }
+        const context = linesBefore.join('\n');
+
+        if (word === 'except' && context.includes('try:')) {
+            const info = MAP[word];
+            return info ? { ...info, title: info.title + ' (in try block)' } : undefined;
+        }
+    }
+
+    // Enhanced loop context detection
+    if (['break', 'continue'].includes(word)) {
+        // Check if we're in a loop context
+        const linesBefore = [];
+        for (let i = Math.max(0, position.line - 20); i < position.line; i++) {
+            linesBefore.push(doc.lineAt(i).text);
+        }
+        const context = linesBefore.join('\n');
+
+        const inLoop = /\b(for|while)\b/.test(context);
+        if (!inLoop) {
+            const info = MAP[word];
+            return info ? { ...info, title: info.title + ' (requires loop context)' } : undefined;
+        }
     }
 
     // Fall back to standard mapping

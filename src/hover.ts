@@ -18,10 +18,10 @@ function detectOperatorAtPosition(doc: vscode.TextDocument, position: vscode.Pos
     const line = doc.lineAt(position.line);
     const lineText = line.text;
     const char = position.character;
-    
+
     // Check for multi-character operators first (longest match)
     const operators = ['==', '!=', '<=', '>=', '//', '**', '<<', '>>', '+=', '-=', '*=', '/=', '//=', '%=', '**=', '&=', '|=', '^=', '<<=', '>>='];
-    
+
     for (const op of operators) {
         const startPos = char - op.length + 1;
         if (startPos >= 0 && startPos + op.length <= lineText.length) {
@@ -32,7 +32,7 @@ function detectOperatorAtPosition(doc: vscode.TextDocument, position: vscode.Pos
             }
         }
     }
-    
+
     // If no multi-character operator found, try single-character operators
     if (char < lineText.length) {
         const singleOps = ['+', '-', '*', '/', '%', '<', '>', '=', '&', '|', '^', '~'];
@@ -42,7 +42,7 @@ function detectOperatorAtPosition(doc: vscode.TextDocument, position: vscode.Pos
             return { range, word: charAtPos };
         }
     }
-    
+
     return null;
 }
 
@@ -114,7 +114,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                     try {
                         let range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
                         let word = '';
-                        
+
                         if (range) {
                             word = doc.getText(range);
                         } else {
@@ -125,7 +125,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                                 word = operatorResult.word;
                             }
                         }
-                        
+
                         if (range && word) {
                             const fallbackMsg = new vscode.MarkdownString('Documentation temporarily unavailable. Try again in a moment.');
                             fallbackMsg.isTrusted = true;
@@ -151,7 +151,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         // Try to get word range - first try normal identifiers, then operators
         let range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
         let word = '';
-        
+
         if (range) {
             word = doc.getText(range);
         } else {
@@ -162,7 +162,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                 word = operatorResult.word;
             }
         }
-        
+
         if (!range || !word) return null;
         let info: Info | undefined;
 

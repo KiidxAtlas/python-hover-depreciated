@@ -12,6 +12,41 @@ import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
 import { createSafeMarkdownString } from './utils/security';
 
 /**
+ * Detect operators at the given position
+ */
+function detectOperatorAtPosition(doc: vscode.TextDocument, position: vscode.Position): { range: vscode.Range; word: string } | null {
+    const line = doc.lineAt(position.line);
+    const lineText = line.text;
+    const char = position.character;
+    
+    // Check for multi-character operators first (longest match)
+    const operators = ['==', '!=', '<=', '>=', '//', '**', '<<', '>>', '+=', '-=', '*=', '/=', '//=', '%=', '**=', '&=', '|=', '^=', '<<=', '>>='];
+    
+    for (const op of operators) {
+        const startPos = char - op.length + 1;
+        if (startPos >= 0 && startPos + op.length <= lineText.length) {
+            const textAtPos = lineText.substring(startPos, startPos + op.length);
+            if (textAtPos === op) {
+                const range = new vscode.Range(position.line, startPos, position.line, startPos + op.length);
+                return { range, word: op };
+            }
+        }
+    }
+    
+    // If no multi-character operator found, try single-character operators
+    if (char < lineText.length) {
+        const singleOps = ['+', '-', '*', '/', '%', '<', '>', '=', '&', '|', '^', '~'];
+        const charAtPos = lineText[char];
+        if (singleOps.includes(charAtPos)) {
+            const range = new vscode.Range(position.line, char, position.line, char + 1);
+            return { range, word: charAtPos };
+        }
+    }
+    
+    return null;
+}
+
+/**
  * Get module-specific quick reference information
  */
 function getModuleQuickReference(moduleName: string): string | null {
@@ -61,6 +96,12 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                     const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
                     if (range) {
                         currentWord = doc.getText(range);
+                    } else {
+                        // Try operators
+                        const operatorResult = detectOperatorAtPosition(doc, position);
+                        if (operatorResult) {
+                            currentWord = operatorResult.word;
+                        }
                     }
 
                     const result = await this.doProvideHover(doc, position);
@@ -71,9 +112,21 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
 
                     // Return a fallback hover with basic information
                     try {
-                        const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
+                        let range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
+                        let word = '';
+                        
                         if (range) {
-                            const word = doc.getText(range);
+                            word = doc.getText(range);
+                        } else {
+                            // Try operators for fallback too
+                            const operatorResult = detectOperatorAtPosition(doc, position);
+                            if (operatorResult) {
+                                range = operatorResult.range;
+                                word = operatorResult.word;
+                            }
+                        }
+                        
+                        if (range && word) {
                             const fallbackMsg = new vscode.MarkdownString('Documentation temporarily unavailable. Try again in a moment.');
                             fallbackMsg.isTrusted = true;
                             resolve(new vscode.Hover(fallbackMsg, range));
@@ -95,10 +148,22 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
 
         const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget, prominentDisplay, includeStringMethods, includeListMethods, includeDictMethods, includeSetMethods, includeModuleInfo, showSignatures, enhancedMethodResolution, showPracticalExamples } = getConfig();
 
-        const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
-        if (!range) return null;
-
-        const word = doc.getText(range);
+        // Try to get word range - first try normal identifiers, then operators
+        let range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
+        let word = '';
+        
+        if (range) {
+            word = doc.getText(range);
+        } else {
+            // Try to detect operators at the current position
+            const operatorResult = detectOperatorAtPosition(doc, position);
+            if (operatorResult) {
+                range = operatorResult.range;
+                word = operatorResult.word;
+            }
+        }
+        
+        if (!range || !word) return null;
         let info: Info | undefined;
 
         // Enhanced method resolution - check for method calls first

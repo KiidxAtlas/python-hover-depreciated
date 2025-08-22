@@ -30,6 +30,54 @@ export const MAP: Record<string, Info> = {
     del: { title: 'del — Delete Statement', url: 'reference/simple_stmts.html', anchor: 'the-del-statement' },
     match: { title: 'match — Pattern Matching (Python 3.10+)', url: 'reference/compound_stmts.html', anchor: 'the-match-statement' },
     case: { title: 'case — Match Case (Python 3.10+)', url: 'reference/compound_stmts.html', anchor: 'the-match-statement' },
+
+    // Logical operators and keywords
+    and: { title: 'and — Logical AND', url: 'reference/expressions.html', anchor: 'boolean-operations' },
+    or: { title: 'or — Logical OR', url: 'reference/expressions.html', anchor: 'boolean-operations' },
+    not: { title: 'not — Logical NOT', url: 'reference/expressions.html', anchor: 'unary-arithmetic-and-bitwise-operations' },
+    is: { title: 'is — Identity Comparison', url: 'reference/expressions.html', anchor: 'identity-comparisons' },
+    in: { title: 'in — Membership Test', url: 'reference/expressions.html', anchor: 'membership-test-operations' },
+
+    // Comparison operators (using string keys for special characters)
+    '==': { title: '== — Equality Comparison', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+    '!=': { title: '!= — Inequality Comparison', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+    '<': { title: '< — Less Than', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+    '>': { title: '> — Greater Than', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+    '<=': { title: '<= — Less Than or Equal', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+    '>=': { title: '>= — Greater Than or Equal', url: 'reference/expressions.html', anchor: 'value-comparisons' },
+
+    // Arithmetic operators
+    '+': { title: '+ — Addition', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '-': { title: '- — Subtraction', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '*': { title: '* — Multiplication', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '/': { title: '/ — Division', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '//': { title: '// — Floor Division', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '%': { title: '% — Modulo', url: 'reference/expressions.html', anchor: 'binary-arithmetic-operations' },
+    '**': { title: '** — Exponentiation', url: 'reference/expressions.html', anchor: 'the-power-operator' },
+
+    // Bitwise operators
+    '&': { title: '& — Bitwise AND', url: 'reference/expressions.html', anchor: 'binary-bitwise-operations' },
+    '|': { title: '| — Bitwise OR', url: 'reference/expressions.html', anchor: 'binary-bitwise-operations' },
+    '^': { title: '^ — Bitwise XOR', url: 'reference/expressions.html', anchor: 'binary-bitwise-operations' },
+    '~': { title: '~ — Bitwise NOT', url: 'reference/expressions.html', anchor: 'unary-arithmetic-and-bitwise-operations' },
+    '<<': { title: '<< — Left Shift', url: 'reference/expressions.html', anchor: 'shifting-operations' },
+    '>>': { title: '>> — Right Shift', url: 'reference/expressions.html', anchor: 'shifting-operations' },
+
+    // Assignment operators
+    '=': { title: '= — Assignment', url: 'reference/simple_stmts.html', anchor: 'assignment-statements' },
+    '+=': { title: '+= — Addition Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '-=': { title: '-= — Subtraction Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '*=': { title: '*= — Multiplication Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '/=': { title: '/= — Division Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '//=': { title: '//= — Floor Division Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '%=': { title: '%= — Modulo Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '**=': { title: '**= — Exponentiation Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '&=': { title: '&= — Bitwise AND Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '|=': { title: '|= — Bitwise OR Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '^=': { title: '^= — Bitwise XOR Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '<<=': { title: '<<= — Left Shift Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+    '>>=': { title: '>>= — Right Shift Assignment', url: 'reference/simple_stmts.html', anchor: 'augmented-assignment-statements' },
+
     // Built-ins
     print: { title: 'print() — Print Objects', url: 'library/functions.html', anchor: 'print' },
     len: { title: 'len() — Return Length', url: 'library/functions.html', anchor: 'len' },
@@ -315,10 +363,13 @@ export const MODULES: Record<string, Info> = {
     ctypes: { title: 'ctypes — Foreign Function Library', url: 'library/ctypes.html' }
 };
 
-export const BUILTIN_KEYWORDS = ['print', 'len', 'range', 'enumerate', 'zip', 'map', 'filter', 'sorted', 'reversed', 'sum', 'max', 'min', 'abs', 'round', 'type', 'vars', 'dir', 'help', 'input', 'eval', 'exec', 'compile', 'hash', 'hex', 'oct', 'bin', 'ord', 'chr', 'ascii', 'repr', 'format', 'divmod', 'callable', 'super', 'staticmethod', 'classmethod', 'property', 'slice', 'object', 'bytes', 'bytearray', 'memoryview', 'frozenset', 'complex', 'locals', 'globals', 'breakpoint'];
+export const BUILTIN_KEYWORDS = ['print', 'len', 'range', 'enumerate', 'zip', 'map', 'filter', 'sorted', 'reversed', 'sum', 'max', 'min', 'abs', 'round', 'type', 'vars', 'dir', 'help', 'input', 'eval', 'exec', 'compile', 'hash', 'hex', 'oct', 'bin', 'ord', 'chr', 'ascii', 'repr', 'format', 'divmod', 'callable', 'super', 'staticmethod', 'classmethod', 'property', 'slice', 'object', 'bytes', 'bytearray', 'memoryview', 'frozenset', 'complex', 'locals', 'globals', 'breakpoint', 'and', 'or', 'not', 'is', 'in'];
 export const DATA_TYPES = ['str', 'int', 'float', 'bool', 'list', 'dict', 'set', 'tuple'];
 export const CONSTANTS = ['None', 'True', 'False'];
 export const TYPING_CONSTRUCTS = ['Generic', 'TypeVar', 'Protocol', 'Union', 'Optional', 'List', 'Dict', 'Set', 'Tuple', 'Callable', 'Type', 'ClassVar', 'Final', 'Literal', 'Annotated', 'Any', 'NoReturn', 'overload'];
+
+// Operators that need special regex handling due to special characters
+export const OPERATORS = ['==', '!=', '<=', '>=', '<', '>', '+', '-', '*', '/', '//', '%', '**', '&', '|', '^', '~', '<<', '>>', '=', '+=', '-=', '*=', '/=', '//=', '%=', '**=', '&=', '|=', '^=', '<<=', '>>='];
 
 // Helper to map dunder names to the Data Model special method anchor
 export function getDunderInfo(name: string): Info | undefined {

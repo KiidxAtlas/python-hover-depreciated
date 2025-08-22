@@ -1,5 +1,25 @@
 # Change Log
 
+## [2.5.0] - 2025-08-21
+
+### ⭐ **Major Feature Addition**
+
+#### 🔧 **Python Operator Support**
+- **Complete Operator Coverage**: Added hover documentation for all Python operators
+- **Comparison Operators**: `==`, `!=`, `<`, `>`, `<=`, `>=` with official documentation links
+- **Arithmetic Operators**: `+`, `-`, `*`, `/`, `//`, `%`, `**` with usage examples
+- **Assignment Operators**: `=`, `+=`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=` and more
+- **Bitwise Operators**: `&`, `|`, `^`, `~`, `<<`, `>>` with bitwise operation docs
+- **Logical Keywords**: Enhanced `and`, `or`, `not`, `is`, `in` support
+- **Smart Detection**: Advanced position detection for multi-character operators
+- **Longest Match Algorithm**: Prioritizes `<=` over `<` for accurate operator recognition
+
+#### 🔧 **Technical Improvements**
+- **Enhanced Word Detection**: Custom operator detection alongside standard identifiers
+- **Code Quality**: Extracted reusable `detectOperatorAtPosition()` helper function
+- **Consistent Fallbacks**: Applied operator detection across error handling and debouncing
+- **Performance**: Optimized operator matching with efficient algorithms
+
 ## [2.4.6] - 2025-08-21
 
 ### 🔧 **Critical Bug Fixes & Security**

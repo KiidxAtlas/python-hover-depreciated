@@ -1,9 +1,9 @@
 {
     "name": "python-hover",
     "icon": "images/icon.png",
-    "displayName": "Python Hover",
-    "description": "Comprehensive Python hover documentation with 300+ built-ins, methods, type hints, examples, and import support",
-    "version": "2.4.0",
+    "displayName": "🐍 Python Hover - Enhanced Documentation",
+    "description": "Instant Python documentation with 300+ constructs, smart context detection, and practical examples. Perfect for learning and quick reference.",
+    "version": "2.4.1",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -19,19 +19,31 @@
     },
     "categories": [
         "Programming Languages",
+        "Education",
         "Other"
     ],
     "keywords": [
         "python",
-        "documentation",
         "hover",
+        "documentation",
         "intellisense",
-        "type-hints",
-        "built-ins",
-        "methods",
         "examples",
+        "learning",
+        "reference",
+        "methods",
+        "built-ins",
+        "type-hints",
+        "education",
+        "productivity",
+        "string-methods",
+        "list-methods",
+        "dict-methods",
         "import-support"
     ],
+    "galleryBanner": {
+        "color": "#1e415e",
+        "theme": "dark"
+    },
     "activationEvents": [
         "onLanguage:python"
     ],

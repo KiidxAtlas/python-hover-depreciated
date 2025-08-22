@@ -35,6 +35,7 @@ export type HoverConfig = {
     showSignatures: boolean;
     enhancedMethodResolution: boolean;
     showPracticalExamples: boolean;
+    compactDisplay: boolean;  // New option for top-aligned, compact hover display
     // Link/markdown customization
     autoLinkPeps?: boolean;
     fixStandardTypeHierarchyLink?: boolean;
@@ -112,6 +113,7 @@ export function getConfig(): HoverConfig {
         showSignatures: cfg.get<boolean>('showSignatures') ?? true,
         enhancedMethodResolution: cfg.get<boolean>('enhancedMethodResolution') ?? true,
         showPracticalExamples: cfg.get<boolean>('showPracticalExamples') ?? true,
+        compactDisplay: cfg.get<boolean>('compactDisplay') ?? true,
     };
 }
 

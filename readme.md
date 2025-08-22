@@ -13,7 +13,7 @@
 🎯 **Smart Context Detection** - Knows when you're working with strings, lists, dicts, or sets  
 💡 **Practical Examples** - Real, copyable code with expected outputs  
 � **Import Intelligence** - Hover support for 40+ standard library modules  
-⚙️ **Fully Customizable** - 8 configuration options to match your workflow
+⚙️ **Fully Customizable** - 9 configuration options to match your workflow
 
 ## 🎥 **See It In Action**
 
@@ -89,7 +89,8 @@ from datetime import datetime  # Hover shows datetime-specific info
   "pythonHover.includeModuleInfo": true,
   "pythonHover.showSignatures": true,
   "pythonHover.enhancedMethodResolution": true,
-  "pythonHover.showPracticalExamples": true
+  "pythonHover.showPracticalExamples": true,
+  "pythonHover.compactDisplay": true
 }
 ```
 
@@ -102,7 +103,7 @@ from datetime import datetime  # Hover shows datetime-specific info
 - 🆕 **Smart Method Resolution** - Context-aware detection recognizes variable types
 - 🆕 **Import Statement Support** - Hover documentation for standard library modules
 - 🆕 **Enhanced Examples** - Modern Python patterns with type hints throughout
-- 🆕 **8 Configuration Options** - Fine-grained control over features
+- 🆕 **9 Configuration Options** - Fine-grained control over features
 - 🚀 **300% Coverage Increase** - From ~50 to 300+ documented constructs
 
 ## 🧠 **How It Works**
@@ -152,7 +153,7 @@ Found a missing method or have a suggestion? We'd love your input!
 - ✅ **5-star rating** from users
 - ✅ **300+ Python constructs** covered
 - ✅ **40+ standard library modules** supported
-- ✅ **8 customization options** available
+- ✅ **9 customization options** available
 
 ---
 

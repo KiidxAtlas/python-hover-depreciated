@@ -385,6 +385,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show practical code examples with type hints and best practices."
+                },
+                "pythonHover.compactDisplay": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use compact hover display that starts at the top without separators for better readability."
                 }
             }
         },

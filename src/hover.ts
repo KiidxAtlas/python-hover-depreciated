@@ -369,30 +369,43 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         md.isTrusted = true;
         md.supportHtml = true;
 
-        // Build the enhanced hover content with title header
+        // Build the enhanced hover content with title header - optimized for top alignment
         let enhancedContent = '';
 
-        // Add prominent title with emoji and better formatting
+        // Add compact title with emoji - controlled by compactDisplay setting
         if (info.title) {
+            const { compactDisplay } = getConfig();
             const titleEmoji = word.startsWith('__') ? '🔧' : BUILTIN_KEYWORDS.includes(word.toLowerCase()) ? '⚡' : '🐍';
 
-            if (prominentDisplay) {
-                // Clean, prominent styling without the "PYTHON DOCUMENTATION" label
-                enhancedContent += `---\n`;
-                enhancedContent += `## ${titleEmoji} **${info.title}**\n`;
-                enhancedContent += `---\n\n`;
+            if (compactDisplay) {
+                // Compact display for top alignment - no separators or extra spacing
+                if (prominentDisplay) {
+                    enhancedContent += `## ${titleEmoji} **${info.title}**\n\n`;
+                } else {
+                    enhancedContent += `**${titleEmoji} ${info.title}**\n\n`;
+                }
             } else {
-                // Standard prominent styling
-                enhancedContent += `# ${titleEmoji} ${info.title}\n\n`;
+                // Traditional display with separators
+                if (prominentDisplay) {
+                    enhancedContent += `---\n## ${titleEmoji} **${info.title}**\n---\n\n`;
+                } else {
+                    enhancedContent += `# ${titleEmoji} ${info.title}\n\n`;
+                }
             }
         }
 
-        // Add the main content
+        // Add the main content immediately after title
         enhancedContent += finalProcessed;
 
-        // Add enhanced footer with better styling
+        // Add footer - compact if compactDisplay is enabled
         if (!enhancedContent.includes('📖 Open official docs')) {
-            enhancedContent += '\n\n---\n';
+            const { compactDisplay } = getConfig();
+            if (compactDisplay) {
+                enhancedContent += '\n\n';
+            } else {
+                enhancedContent += '\n\n---\n';
+            }
+            
             if (prominentDisplay) {
                 enhancedContent += `**📖 [➤ VIEW FULL PYTHON DOCUMENTATION](${fullUrl})**`;
             } else {

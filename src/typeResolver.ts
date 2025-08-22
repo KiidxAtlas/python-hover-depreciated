@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { MAP } from './data/map';
+import { MAP, MODULES } from './data/map';
 import { isKnownMethod, resolveMethodInfo } from './features/methodResolver';
 import { Info } from './types';
 
@@ -37,42 +37,21 @@ const TYPE_KEYWORDS: Record<string, keyof typeof MAP> = {
 
 /**
  * Common module mappings for import statement hover
+ *
+ * Supports 70+ built-in Python modules including:
+ * - Standard Library: os, sys, math, random, datetime, json, re, pathlib
+ * - Collections: collections, itertools, functools, array, heapq, bisect
+ * - Concurrency: threading, multiprocessing, asyncio, queue
+ * - I/O & Formats: io, csv, xml, pickle, gzip, zipfile, tarfile
+ * - Networking: urllib, http, socket, ftplib, smtplib, email
+ * - Development: unittest, logging, pdb, profile, timeit, inspect
+ * - Data Types: typing, enum, dataclasses, decimal, fractions, uuid
+ * - Text Processing: string, textwrap, unicodedata, codecs, locale
+ * - System: subprocess, shutil, glob, tempfile, warnings, gc
+ * - Cryptography: hashlib, secrets, base64
+ * - And many more...
  */
-const MODULE_INFO: Record<string, Info> = {
-    'os': { title: 'os — Operating System Interface', url: 'library/os.html', anchor: 'module-os' },
-    'sys': { title: 'sys — System Parameters', url: 'library/sys.html', anchor: 'module-sys' },
-    'math': { title: 'math — Mathematical Functions', url: 'library/math.html', anchor: 'module-math' },
-    'random': { title: 'random — Generate Random Numbers', url: 'library/random.html', anchor: 'module-random' },
-    'datetime': { title: 'datetime — Date and Time', url: 'library/datetime.html', anchor: 'module-datetime' },
-    'json': { title: 'json — JSON Encoder/Decoder', url: 'library/json.html', anchor: 'module-json' },
-    're': { title: 're — Regular Expressions', url: 'library/re.html', anchor: 'module-re' },
-    'urllib': { title: 'urllib — URL Handling Modules', url: 'library/urllib.html', anchor: 'module-urllib' },
-    'collections': { title: 'collections — Container Data Types', url: 'library/collections.html', anchor: 'module-collections' },
-    'itertools': { title: 'itertools — Iterator Functions', url: 'library/itertools.html', anchor: 'module-itertools' },
-    'functools': { title: 'functools — Higher-order Functions', url: 'library/functools.html', anchor: 'module-functools' },
-    'pathlib': { title: 'pathlib — Object-oriented Filesystem Paths', url: 'library/pathlib.html', anchor: 'module-pathlib' },
-    'typing': { title: 'typing — Type Hints', url: 'library/typing.html', anchor: 'module-typing' },
-    'asyncio': { title: 'asyncio — Asynchronous I/O', url: 'library/asyncio.html', anchor: 'module-asyncio' },
-    'sqlite3': { title: 'sqlite3 — SQLite Database', url: 'library/sqlite3.html', anchor: 'module-sqlite3' },
-    'csv': { title: 'csv — CSV File Reading/Writing', url: 'library/csv.html', anchor: 'module-csv' },
-    'xml': { title: 'xml — XML Processing Modules', url: 'library/xml.html', anchor: 'module-xml' },
-    'logging': { title: 'logging — Logging Facility', url: 'library/logging.html', anchor: 'module-logging' },
-    'unittest': { title: 'unittest — Unit Testing Framework', url: 'library/unittest.html', anchor: 'module-unittest' },
-    'pickle': { title: 'pickle — Python Object Serialization', url: 'library/pickle.html', anchor: 'module-pickle' },
-    'base64': { title: 'base64 — Base64 Data Encodings', url: 'library/base64.html', anchor: 'module-base64' },
-    'hashlib': { title: 'hashlib — Secure Hashes and Message Digests', url: 'library/hashlib.html', anchor: 'module-hashlib' },
-    'secrets': { title: 'secrets — Secure Random Numbers', url: 'library/secrets.html', anchor: 'module-secrets' },
-    'threading': { title: 'threading — Thread-based Parallelism', url: 'library/threading.html', anchor: 'module-threading' },
-    'multiprocessing': { title: 'multiprocessing — Process-based Parallelism', url: 'library/multiprocessing.html', anchor: 'module-multiprocessing' },
-    'subprocess': { title: 'subprocess — Subprocess Management', url: 'library/subprocess.html', anchor: 'module-subprocess' },
-    'shutil': { title: 'shutil — High-level File Operations', url: 'library/shutil.html', anchor: 'module-shutil' },
-    'glob': { title: 'glob — Unix Style Pathname Pattern Expansion', url: 'library/glob.html', anchor: 'module-glob' },
-    'tempfile': { title: 'tempfile — Temporary Files and Directories', url: 'library/tempfile.html', anchor: 'module-tempfile' },
-    'io': { title: 'io — Core Tools for Working with Streams', url: 'library/io.html', anchor: 'module-io' },
-    'gzip': { title: 'gzip — Support for gzip Files', url: 'library/gzip.html', anchor: 'module-gzip' },
-    'zipfile': { title: 'zipfile — Work with ZIP Archives', url: 'library/zipfile.html', anchor: 'module-zipfile' },
-    'tarfile': { title: 'tarfile — Read and Write tar Archive Files', url: 'library/tarfile.html', anchor: 'module-tarfile' }
-};
+const MODULE_INFO = MODULES;
 
 /**
  * Detect import statements and provide module information

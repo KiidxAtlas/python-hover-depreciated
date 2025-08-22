@@ -1,6 +1,6 @@
 # 🐍 Python Hover - Enhanced Documentation Assistant
 
-> **Instant Python documentation at your fingertips**  
+> **Instant Python documentation at your fingertips**
 > Get comprehensive examples, type hints, and practical code snippets without leaving your editor.
 
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/KiidxAtlas.python-hover)](https://marketplace.visualstudio.com/items?itemName=KiidxAtlas.python-hover)
@@ -9,10 +9,10 @@
 
 ## ✨ **What Makes This Special**
 
-🚀 **300+ Python Constructs** - Complete coverage of built-ins, methods, and language features  
-🎯 **Smart Context Detection** - Knows when you're working with strings, lists, dicts, or sets  
-💡 **Practical Examples** - Real, copyable code with expected outputs  
-� **Import Intelligence** - Hover support for 40+ standard library modules  
+🚀 **300+ Python Constructs** - Complete coverage of built-ins, methods, and language features
+🎯 **Smart Context Detection** - Knows when you're working with strings, lists, dicts, or sets
+💡 **Practical Examples** - Real, copyable code with expected outputs
+� **Import Intelligence** - Hover support for 40+ standard library modules
 ⚙️ **Fully Customizable** - 9 configuration options to match your workflow
 
 ## 🎥 **See It In Action**

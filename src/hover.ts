@@ -1,12 +1,33 @@
 import * as vscode from 'vscode';
 import { getConfig } from './config';
 import { getContextualInfo } from './context';
-import { BUILTIN_KEYWORDS, DATA_TYPES, MAP, getDunderInfo } from './data/map';
+import { BUILTIN_KEYWORDS, DATA_TYPES, getDunderInfo, MAP, TYPING_CONSTRUCTS } from './data/map';
 import { getSectionMarkdown } from './docs/sections';
 import { buildSpecialMethodsSection, getEnhancedExamples } from './examples';
 import { getMethodExample, isKnownMethod, resolveMethodInfo } from './features/methodResolver';
 import { resolveImportInfo } from './typeResolver';
+import { Info } from './types';
 import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
+
+/**
+ * Get module-specific quick reference information
+ */
+function getModuleQuickReference(moduleName: string): string | null {
+    const quickRefs: Record<string, string> = {
+        'os': '`os.getcwd()`, `os.listdir()`, `os.path.join()`, `os.makedirs()`, `os.remove()`',
+        'sys': '`sys.argv`, `sys.version`, `sys.path`, `sys.exit()`, `sys.platform`',
+        'math': '`math.pi`, `math.sqrt()`, `math.sin()`, `math.floor()`, `math.ceil()`',
+        'random': '`random.randint()`, `random.choice()`, `random.shuffle()`, `random.random()`',
+        'json': '`json.loads()`, `json.dumps()`, `json.load()`, `json.dump()`',
+        'datetime': '`datetime.now()`, `datetime.date()`, `datetime.timedelta()`, `strftime()`',
+        're': '`re.search()`, `re.match()`, `re.findall()`, `re.sub()`, `re.compile()`',
+        'pathlib': '`Path()`, `Path.exists()`, `Path.mkdir()`, `Path.glob()`, `Path.read_text()`',
+        'collections': '`Counter()`, `defaultdict()`, `deque()`, `OrderedDict()`, `namedtuple()`',
+        'itertools': '`itertools.chain()`, `combinations()`, `permutations()`, `cycle()`, `count()`'
+    };
+
+    return quickRefs[moduleName] || null;
+}
 
 /**
  * Enhanced hover provider with error boundaries and debouncing
@@ -78,7 +99,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         if (!range) return null;
 
         const word = doc.getText(range);
-        let info: { title: string; url: string; anchor: string } | undefined;
+        let info: Info | undefined;
 
         // Enhanced method resolution - check for method calls first
         if (enhancedMethodResolution && isKnownMethod(word)) {
@@ -103,10 +124,50 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
             }
         }
 
-        // Check for import statements
+        // Check for import statements with enhanced module display
         if (!info && includeModuleInfo) {
             const importInfo = resolveImportInfo(doc, position, word);
-            if (importInfo) info = importInfo;
+            if (importInfo) {
+                // Create a more prominent module hover that takes precedence
+                const moduleMarkdown = new vscode.MarkdownString();
+                moduleMarkdown.isTrusted = true;
+
+                // Get base URL from config
+                const { getDocsBaseUrl: getBaseUrl } = await import('./config');
+                const baseUrl = getBaseUrl();
+
+                // Create a clean, prominent module documentation display
+                const moduleTitle = `## 🐍 ${importInfo.title}`;
+                const moduleLink = `${baseUrl}/${importInfo.url}`;
+
+                let moduleContent = `${moduleTitle}\n\n`;
+
+                // Add direct action links at the top for immediate access
+                const actions = [
+                    `[📖 Open Documentation](${moduleLink})`,
+                    `[📋 Copy URL](command:pythonHover.copyUrl?${encodeURIComponent(JSON.stringify({ url: moduleLink }))})`,
+                    `[🔍 Open in Editor](command:pythonHover.openInEditor?${encodeURIComponent(JSON.stringify({ url: moduleLink }))})`
+                ];
+                moduleContent += `${actions.join(' · ')}\n\n`;
+
+                // Add a clean separator and brief description
+                moduleContent += `---\n\n`;
+                moduleContent += `**Module**: \`${word}\`  \n`;
+                moduleContent += `**Type**: Python Standard Library Module  \n`;
+                moduleContent += `**Documentation**: [${importInfo.title}](${moduleLink})  \n\n`;
+
+                // Add module-specific quick reference if available
+                const moduleQuickRef = getModuleQuickReference(word);
+                if (moduleQuickRef) {
+                    moduleContent += `### Quick Reference\n${moduleQuickRef}\n\n`;
+                }
+
+                moduleContent += `*Click "📖 Open Documentation" above for complete module documentation.*`;
+
+                moduleMarkdown.appendMarkdown(moduleContent);
+
+                return new vscode.Hover(moduleMarkdown, range);
+            }
         }
 
         // Use context-aware mapping when enabled; otherwise fall back to static map
@@ -148,6 +209,9 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         // Preserve original behavior: includeBuiltins=false hides built-ins AND data types
         if (!includeBuiltins && (BUILTIN_KEYWORDS.includes(lower) || DATA_TYPES.includes(lower))) return null;
         // Additional control: when built-ins are included, allow separately hiding data types
+        if (!includeDataTypes && DATA_TYPES.includes(lower)) return null;
+        // Allow typing constructs when built-ins are enabled (they're considered advanced built-ins)
+        if (!includeBuiltins && TYPING_CONSTRUCTS.includes(word)) return null;
         if (includeBuiltins && !includeDataTypes && DATA_TYPES.includes(lower)) return null;
         if (!includeConstants && ['None', 'True', 'False'].includes(word)) return null;
         // Allow hiding exceptions via config
@@ -185,7 +249,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
 
         if (!mdBody && !offlineOnly) {
             try {
-                mdBody = await getSectionMarkdown(baseUrl, info.url, info.anchor);
+                mdBody = await getSectionMarkdown(baseUrl, info.url, info.anchor || '');
                 await context.globalState.update(cacheKey, { ts: now, md: mdBody });
 
                 // Store in enhanced cache manager with 10 minute TTL
@@ -375,7 +439,9 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         // Add compact title with emoji - controlled by compactDisplay setting
         if (info.title) {
             const { compactDisplay } = getConfig();
-            const titleEmoji = word.startsWith('__') ? '🔧' : BUILTIN_KEYWORDS.includes(word.toLowerCase()) ? '⚡' : '🐍';
+            const titleEmoji = word.startsWith('__') ? '🔧' :
+                BUILTIN_KEYWORDS.includes(word.toLowerCase()) ? '⚡' :
+                    TYPING_CONSTRUCTS.includes(word) ? '🏷️' : '🐍';
 
             if (compactDisplay) {
                 // Compact display for top alignment - no separators or extra spacing
@@ -405,7 +471,7 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
             } else {
                 enhancedContent += '\n\n---\n';
             }
-            
+
             if (prominentDisplay) {
                 enhancedContent += `**📖 [➤ VIEW FULL PYTHON DOCUMENTATION](${fullUrl})**`;
             } else {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export type Info = { title: string; url: string; anchor: string };
+export type Info = { title: string; url: string; anchor?: string };
 
 /**
  * Enhanced type definitions for better type safety
@@ -8,7 +8,7 @@ export type Info = { title: string; url: string; anchor: string };
 export interface HoverInfo {
     title: string;
     url: string;
-    anchor: string;
+    anchor?: string;
 }
 
 export interface CachedContent {

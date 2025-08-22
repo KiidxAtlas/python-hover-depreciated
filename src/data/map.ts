@@ -91,6 +91,10 @@ export const MAP: Record<string, Info> = {
     locals: { title: 'locals() — Local Variables', url: 'library/functions.html', anchor: 'locals' },
     globals: { title: 'globals() — Global Variables', url: 'library/functions.html', anchor: 'globals' },
     breakpoint: { title: 'breakpoint() — Debug Breakpoint', url: 'library/functions.html', anchor: 'breakpoint' },
+    // Python 3.10+ additions
+    __import__: { title: '__import__() — Import Function', url: 'library/functions.html', anchor: '__import__' },
+    aiter: { title: 'aiter() — Async Iterator (3.10+)', url: 'library/functions.html', anchor: 'aiter' },
+    anext: { title: 'anext() — Async Next (3.10+)', url: 'library/functions.html', anchor: 'anext' },
     // Data types
     str: { title: 'str — String Type', url: 'library/stdtypes.html', anchor: 'text-sequence-type-str' },
     int: { title: 'int — Integer Type', url: 'library/functions.html', anchor: 'int' },
@@ -112,6 +116,13 @@ export const MAP: Record<string, Info> = {
     KeyError: { title: 'KeyError — Missing Mapping Key', url: 'library/exceptions.html', anchor: 'KeyError' },
     IndexError: { title: 'IndexError — Sequence Index Out of Range', url: 'library/exceptions.html', anchor: 'IndexError' },
     StopIteration: { title: 'StopIteration — Iterator Exhausted', url: 'library/exceptions.html', anchor: 'StopIteration' },
+    ImportError: { title: 'ImportError — Import Failed', url: 'library/exceptions.html', anchor: 'ImportError' },
+    AttributeError: { title: 'AttributeError — Attribute Error', url: 'library/exceptions.html', anchor: 'AttributeError' },
+    NameError: { title: 'NameError — Name Not Found', url: 'library/exceptions.html', anchor: 'NameError' },
+    RuntimeError: { title: 'RuntimeError — Runtime Error', url: 'library/exceptions.html', anchor: 'RuntimeError' },
+    NotImplementedError: { title: 'NotImplementedError — Not Implemented', url: 'library/exceptions.html', anchor: 'NotImplementedError' },
+    FileNotFoundError: { title: 'FileNotFoundError — File Not Found', url: 'library/exceptions.html', anchor: 'FileNotFoundError' },
+    PermissionError: { title: 'PermissionError — Permission Denied', url: 'library/exceptions.html', anchor: 'PermissionError' },
 
     // String methods
     strip: { title: 'str.strip() — Remove Whitespace', url: 'library/stdtypes.html', anchor: 'str.strip' },
@@ -156,6 +167,11 @@ export const MAP: Record<string, Info> = {
     maketrans: { title: 'str.maketrans() — Make Translation Table', url: 'library/stdtypes.html', anchor: 'str.maketrans' },
     removeprefix: { title: 'str.removeprefix() — Remove Prefix (Python 3.9+)', url: 'library/stdtypes.html', anchor: 'str.removeprefix' },
     removesuffix: { title: 'str.removesuffix() — Remove Suffix (Python 3.9+)', url: 'library/stdtypes.html', anchor: 'str.removesuffix' },
+    isascii: { title: 'str.isascii() — Check ASCII (3.7+)', url: 'library/stdtypes.html', anchor: 'str.isascii' },
+    isprintable: { title: 'str.isprintable() — Check Printable', url: 'library/stdtypes.html', anchor: 'str.isprintable' },
+    isidentifier: { title: 'str.isidentifier() — Check Identifier', url: 'library/stdtypes.html', anchor: 'str.isidentifier' },
+    isnumeric: { title: 'str.isnumeric() — Check Numeric', url: 'library/stdtypes.html', anchor: 'str.isnumeric' },
+    isdecimal: { title: 'str.isdecimal() — Check Decimal', url: 'library/stdtypes.html', anchor: 'str.isdecimal' },
 
     // List methods
     append: { title: 'list.append() — Add Item', url: 'library/stdtypes.html', anchor: 'mutable-sequence-types' },

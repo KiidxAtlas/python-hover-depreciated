@@ -5,6 +5,28 @@ import { resolveImportInfo } from './typeResolver';
 import { Info } from './types';
 
 /**
+ * Cache for compiled regex patterns to improve performance
+ */
+const REGEX_CACHE = new Map<string, RegExp>();
+
+/**
+ * Get a cached regex pattern or create and cache it
+ */
+function getCachedRegex(pattern: string, flags?: string): RegExp {
+    const key = `${pattern}:${flags || ''}`;
+    if (!REGEX_CACHE.has(key)) {
+        try {
+            REGEX_CACHE.set(key, new RegExp(pattern, flags));
+        } catch (error) {
+            console.error('Invalid regex pattern:', pattern, error);
+            // Return a safe fallback regex that never matches
+            return /(?!)/;
+        }
+    }
+    return REGEX_CACHE.get(key)!;
+}
+
+/**
  * Enhanced contextual information provider for Python hover
  * Provides context-aware documentation based on code patterns and usage
  */
@@ -21,7 +43,7 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
     // Check for method calls on built-in types
     if (isKnownMethod(word)) {
         // Try to determine the receiver type from context
-        const dotMatch = beforeWord.match(/(\w+)\s*\.\s*$/);
+        const dotMatch = beforeWord.match(getCachedRegex(String.raw`(\w+)\s*\.\s*$`));
         if (dotMatch) {
             const receiverName = dotMatch[1];
             const methodInfo = resolveMethodInfo(doc, position, word, undefined);
@@ -30,7 +52,7 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
     }
 
     // Handle dunder methods with enhanced context
-    if (/^__.*__$/.test(word)) {
+    if (getCachedRegex('^__.*__$').test(word)) {
         return getDunderInfoWithContext(doc, position, word, beforeWord, afterWord);
     }
 
@@ -62,7 +84,7 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
         const textBeforePosition = fullText.substring(0, doc.offsetAt(position));
 
         // Check if we're in an async context
-        const inAsyncFunction = /async\s+def\s+\w+[^:]*:\s*[^]*$/.test(textBeforePosition);
+        const inAsyncFunction = getCachedRegex(String.raw`async\s+def\s+\w+[^:]*:\s*[^]*$`).test(textBeforePosition);
         const inAsyncWith = textBeforePosition.includes('async with');
         const inAsyncFor = textBeforePosition.includes('async for');
 
@@ -89,7 +111,7 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
     }
 
     // F-string detection
-    if (word === 'f' && /^["']/.test(afterWord.trim())) {
+    if (word === 'f' && getCachedRegex('^["\'"]').test(afterWord.trim())) {
         return MAP['f-string'];
     }
 
@@ -117,7 +139,7 @@ export function getContextualInfo(doc: vscode.TextDocument, position: vscode.Pos
         }
         const context = linesBefore.join('\n');
 
-        const inLoop = /\b(for|while)\b/.test(context);
+        const inLoop = getCachedRegex(String.raw`\b(for|while)\b`).test(context);
         if (!inLoop) {
             const info = MAP[word];
             return info ? { ...info, title: info.title + ' (requires loop context)' } : undefined;

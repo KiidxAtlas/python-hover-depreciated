@@ -303,9 +303,9 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Clear all related cache entries for this word
         const relatedKeys = allKeys.filter(key =>
-            (key.includes(info.url) && key.includes(info.anchor)) ||
-            key.includes(`pyDocs:v8:${ver}:${info.url}#${info.anchor}`) ||
-            key.includes(`hot:v8:${ver}:${info.url}#${info.anchor}`) ||
+            (key.includes(info.url) && (info.anchor ? key.includes(info.anchor) : true)) ||
+            key.includes(`pyDocs:v8:${ver}:${info.url}#${info.anchor || ''}`) ||
+            key.includes(`hot:v8:${ver}:${info.url}#${info.anchor || ''}`) ||
             key.includes(`sec:v8:`)
         );
 

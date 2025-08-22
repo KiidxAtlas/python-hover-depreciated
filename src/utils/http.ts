@@ -1,5 +1,6 @@
 import * as https from 'https';
 import { getConfig } from '../config';
+import { isValidUrl, RateLimiter } from './security';
 
 // Use globalThis.URL to avoid needing the 'url' module types
 const URLCtor = (globalThis as any).URL as (new (input: string, base?: string) => URL) | undefined;
@@ -22,6 +23,7 @@ export interface RetryOptions {
 export class HttpClient {
     private static instance: HttpClient;
     private defaultOptions: RetryOptions;
+    private rateLimiter: RateLimiter;
 
     private constructor() {
         this.defaultOptions = {
@@ -32,6 +34,9 @@ export class HttpClient {
             retryOnTimeout: true,
             retryOnConnectionError: true
         };
+        
+        // Initialize rate limiter: 100 requests per minute
+        this.rateLimiter = new RateLimiter(100, 60000);
     }
 
     static getInstance(): HttpClient {
@@ -101,9 +106,20 @@ export class HttpClient {
     }
 
     /**
-     * Enhanced fetch with exponential backoff retry
+     * Enhanced fetch with exponential backoff retry and security validation
      */
     async fetchWithRetry(url: string, retryOptions: Partial<RetryOptions> = {}): Promise<string> {
+        // Security validation
+        if (!isValidUrl(url)) {
+            throw new Error(`Invalid or unsafe URL: ${url}`);
+        }
+        
+        // Rate limiting
+        const urlHost = new URL(url).hostname;
+        if (!this.rateLimiter.isAllowed(urlHost)) {
+            throw new Error(`Rate limit exceeded for ${urlHost}`);
+        }
+        
         const opts = { ...this.defaultOptions, ...retryOptions };
         let lastError: Error | null = null;
 

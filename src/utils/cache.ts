@@ -82,19 +82,23 @@ export class LRUCache<K, V> {
 }
 
 /**
- * Enhanced cache manager with disk persistence and cache warming
+ * Enhanced cache manager with disk persistence, memory management, and cache warming
  */
 export class CacheManager {
     private static instance: CacheManager;
     private cache: LRUCache<string, CacheEntry<any>>;
     private stats: { hits: number; misses: number };
     private maxSize: number;
+    private maxMemorySize: number;
+    private currentMemorySize: number;
     private diskCacheEnabled: boolean;
     private diskCachePath: string;
     private warmupPromise: Promise<void> | null = null;
 
     private constructor() {
         this.maxSize = 100;
+        this.maxMemorySize = 50 * 1024 * 1024; // 50MB
+        this.currentMemorySize = 0;
         this.cache = new LRUCache<string, CacheEntry<any>>(this.maxSize);
         this.stats = { hits: 0, misses: 0 };
         this.diskCacheEnabled = true;
@@ -163,13 +167,20 @@ export class CacheManager {
     }
 
     /**
-     * Set cache entry with TTL
+     * Set cache entry with TTL and memory management
      */
     set<T>(key: string, value: T, ttl: number = 3600000): void {
         const expires = Date.now() + ttl;
         const entry: CacheEntry<T> = { value, expires };
 
+        // Calculate memory size for the entry
+        const entrySize = this.calculateEntrySize(entry);
+        
+        // Check if we need to evict old entries to stay within memory limits
+        this.evictIfNecessary(entrySize);
+
         this.cache.set(key, entry);
+        this.currentMemorySize += entrySize;
 
         // Save to disk asynchronously
         if (this.diskCacheEnabled) {
@@ -177,6 +188,48 @@ export class CacheManager {
                 console.debug('Failed to save to disk cache:', error);
             });
         }
+    }
+
+    /**
+     * Calculate the memory size of a cache entry
+     */
+    private calculateEntrySize(entry: CacheEntry<any>): number {
+        try {
+            return JSON.stringify(entry).length * 2; // Approximate UTF-16 byte size
+        } catch (error) {
+            console.warn('Failed to calculate entry size:', error);
+            return 1024; // Default size estimate
+        }
+    }
+
+    /**
+     * Evict oldest entries if memory limit would be exceeded
+     */
+    private evictIfNecessary(newEntrySize: number): void {
+        while (this.currentMemorySize + newEntrySize > this.maxMemorySize && this.cache.size() > 0) {
+            const oldestKey = this.cache.keys().next().value;
+            if (oldestKey) {
+                const removedEntry = this.cache.get(oldestKey);
+                if (removedEntry) {
+                    this.currentMemorySize -= this.calculateEntrySize(removedEntry);
+                }
+                this.cache.delete(oldestKey);
+                this.deleteFromDisk(oldestKey);
+            } else {
+                break; // No more entries to evict
+            }
+        }
+    }
+
+    /**
+     * Get current memory usage statistics
+     */
+    getMemoryStats(): { currentSize: number; maxSize: number; utilization: number } {
+        return {
+            currentSize: this.currentMemorySize,
+            maxSize: this.maxMemorySize,
+            utilization: this.currentMemorySize / this.maxMemorySize
+        };
     }
 
     /**

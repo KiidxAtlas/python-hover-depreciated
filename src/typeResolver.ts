@@ -124,46 +124,66 @@ export async function resolveTypeInfoForAttribute(doc: vscode.TextDocument, posi
         const maxLinesBack = 200; // small, keeps things quick
         for (let i = position.line; i >= Math.max(0, position.line - maxLinesBack); i--) {
             const text = doc.lineAt(i).text;
-            // pattern: name: Type
-            const ann = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)`);
-            const mAnn = text.match(ann);
-            if (mAnn) {
-                const t = mAnn[1];
-                const info = typeToInfo(t, memberName);
-                if (info) return info;
+            
+            try {
+                // pattern: name: Type
+                const ann = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)`);
+                const mAnn = text.match(ann);
+                if (mAnn) {
+                    const t = mAnn[1];
+                    const info = typeToInfo(t, memberName);
+                    if (info) return info;
+                }
+                
+                // pattern: name = Something(...)
+                const call = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\(`);
+                const mCall = text.match(call);
+                if (mCall) {
+                    const t = mCall[1];
+                    const info = typeToInfo(t, memberName);
+                    if (info) return info;
+                }
+                
+                // pattern: name = "..."|f"..."|r"..."|b"..." (bytes also considered string-like)
+                const strAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*(?:[fFrRbBuU]?)[\'\"]`);
+                if (strAssign.test(text)) {
+                    return methodAnchorFromStdType('str', memberName);
+                }
+                
+                // name = [ ... ]
+                const listAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\[`);
+                if (listAssign.test(text)) return methodAnchorFromStdType('list', memberName);
+                
+                // name = { ... }
+                const dictAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\{`);
+                if (dictAssign.test(text)) {
+                    // naive: treat as dict; set detection is ambiguous without parsing
+                    return methodAnchorFromStdType('dict', memberName);
+                }
+                
+                // name = ( ... ) → tuple
+                const tupleAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\(`);
+                if (tupleAssign.test(text)) return methodAnchorFromStdType('tuple', memberName);
+            } catch (regexError) {
+                console.error('Error in regex operation for type resolution:', regexError);
+                continue; // Skip this line and continue with the next
             }
-            // pattern: name = Something(...)
-            const call = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\(`);
-            const mCall = text.match(call);
-            if (mCall) {
-                const t = mCall[1];
-                const info = typeToInfo(t, memberName);
-                if (info) return info;
-            }
-            // pattern: name = "..."|f"..."|r"..."|b"..." (bytes also considered string-like)
-            const strAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*(?:[fFrRbBuU]?)[\'\"]`);
-            if (strAssign.test(text)) {
-                return methodAnchorFromStdType('str', memberName);
-            }
-            // name = [ ... ]
-            const listAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\[`);
-            if (listAssign.test(text)) return methodAnchorFromStdType('list', memberName);
-            // name = { ... }
-            const dictAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\{`);
-            if (dictAssign.test(text)) {
-                // naive: treat as dict; set detection is ambiguous without parsing
-                return methodAnchorFromStdType('dict', memberName);
-            }
-            // name = ( ... ) → tuple
-            const tupleAssign = new RegExp(`\\b${escapeRegExp(receiverName)}\\s*=\\s*\\(`);
-            if (tupleAssign.test(text)) return methodAnchorFromStdType('tuple', memberName);
         }
-    } catch { }
+    } catch (error) {
+        console.error('Error in resolveTypeInfoForAttribute:', error);
+    }
     return undefined;
 }
 
 /**
  * Infer the type of a receiver variable by looking at assignments
+ * @param doc - The text document containing the code
+ * @param position - The position in the document to search from
+ * @param receiverName - The name of the variable whose type to infer
+ * @returns The inferred type name as a string, or undefined if not determinable
+ * @example
+ * // For code: my_var = "hello"
+ * // Returns: "str"
  */
 async function inferReceiverType(doc: vscode.TextDocument, position: vscode.Position, receiverName: string): Promise<string | undefined> {
     const maxLinesBack = 100;

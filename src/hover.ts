@@ -481,6 +481,11 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
 
         md.appendMarkdown(enhancedContent);
 
+        // Add subtle version info for debugging (only in dev mode)
+        if (process.env.NODE_ENV === 'development') {
+            md.appendMarkdown('\n\n---\n\n*Python Hover v2.4.5*');
+        }
+
         return new vscode.Hover(md, range);
     }
 

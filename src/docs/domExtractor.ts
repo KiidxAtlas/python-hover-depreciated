@@ -31,7 +31,7 @@ export function extractSectionHtmlDom(fullHtml: string, pageUrl: string, anchor:
 
     // If the anchor is on a <section> (as in Sphinx docs), extract that section only.
     // Otherwise, prefer the closest section ancestor that contains the anchor.
-    let section = node.is('section') ? node : node.closest('section');
+    const section = node.is('section') ? node : node.closest('section');
     if (section && section.length) {
         // Use the section HTML directly to avoid bleeding into sibling sections like "while", "for", etc.
         const sectionHtml = $.html(section);

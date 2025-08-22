@@ -7,7 +7,9 @@ import { buildSpecialMethodsSection, getEnhancedExamples } from './examples';
 import { getMethodExample, isKnownMethod, resolveMethodInfo } from './features/methodResolver';
 import { resolveImportInfo } from './typeResolver';
 import { Info } from './types';
+import { createDocsCacheKey, createHotCacheKey } from './utils/cacheKeys';
 import { ensureClosedFences, smartTruncateMarkdown } from './utils/markdown';
+import { createSafeMarkdownString } from './utils/security';
 
 /**
  * Get module-specific quick reference information
@@ -35,6 +37,11 @@ function getModuleQuickReference(moduleName: string): string | null {
 class EnhancedHoverProvider implements vscode.HoverProvider {
     private pendingRequests = new Map<string, NodeJS.Timeout>();
     private readonly debounceMs = 50;
+    private context: vscode.ExtensionContext;
+
+    constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+    }
 
     async provideHover(doc: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | null> {
         const key = `${doc.uri.toString()}:${position.line}:${position.character}`;
@@ -86,13 +93,6 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
     private async doProvideHover(doc: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | null> {
         const startTime = Date.now();
 
-        // Get the extension context from the global state (we'll need to pass this in)
-        const context = (globalThis as any).__pythonHoverContext as vscode.ExtensionContext;
-        if (!context) {
-            console.warn('Extension context not available for hover provider');
-            return null;
-        }
-
         const { contextAware, includeBuiltins, showExamples, maxContentLength, pythonVersion, cacheDays, includeDataTypes, includeConstants, includeExceptions, summaryOnly, showSpecialMethodsSection, includeDunderMethods, offlineOnly, showActionLinks, openTarget, prominentDisplay, includeStringMethods, includeListMethods, includeDictMethods, includeSetMethods, includeModuleInfo, showSignatures, enhancedMethodResolution, showPracticalExamples } = getConfig();
 
         const range = doc.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_]*/);
@@ -130,7 +130,8 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
             if (importInfo) {
                 // Create a more prominent module hover that takes precedence
                 const moduleMarkdown = new vscode.MarkdownString();
-                moduleMarkdown.isTrusted = true;
+                moduleMarkdown.isTrusted = false; // Module links should be external only
+                moduleMarkdown.supportHtml = false;
 
                 // Get base URL from config
                 const { getDocsBaseUrl: getBaseUrl } = await import('./config');
@@ -145,8 +146,8 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
                 // Add direct action links at the top for immediate access
                 const actions = [
                     `[📖 Open Documentation](${moduleLink})`,
-                    `[📋 Copy URL](command:pythonHover.copyUrl?${encodeURIComponent(JSON.stringify({ url: moduleLink }))})`,
-                    `[🔍 Open in Editor](command:pythonHover.openInEditor?${encodeURIComponent(JSON.stringify({ url: moduleLink }))})`
+                    `[📋 Copy URL](command:pythonHover.copyDocsUrl?${encodeURIComponent(JSON.stringify([moduleLink]))})`,
+                    `[🔍 Open in Editor](command:pythonHover.openDocsInEditorWithUrl?${encodeURIComponent(JSON.stringify([moduleLink]))})`
                 ];
                 moduleContent += `${actions.join(' · ')}\n\n`;
 
@@ -164,9 +165,9 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
 
                 moduleContent += `*Click "📖 Open Documentation" above for complete module documentation.*`;
 
-                moduleMarkdown.appendMarkdown(moduleContent);
-
-                return new vscode.Hover(moduleMarkdown, range);
+                // Use safe markdown creation - this has command URIs so needs to be trusted and validated
+                const safeModuleMarkdown = createSafeMarkdownString(moduleContent, true);
+                return new vscode.Hover(safeModuleMarkdown, range);
             }
         }
 
@@ -226,9 +227,9 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         const { CacheManager } = await import('./utils/cache');
         const cacheManager = CacheManager.getInstance();
 
-        const sessionHotKey = `hot:v8:${pythonVersion}:${info.url}#${info.anchor}`;
-        const cacheKey = `pyDocs:v8:${pythonVersion}:${info.url}#${info.anchor}`;
-        const cached = context.globalState.get<{ ts: number; md: string }>(cacheKey);
+        const sessionHotKey = createHotCacheKey(pythonVersion, info.url, info.anchor);
+        const cacheKey = createDocsCacheKey(pythonVersion, info.url, info.anchor);
+        const cached = this.context.globalState.get<{ ts: number; md: string }>(cacheKey);
         const now = Date.now();
         const freshMs = cacheDays * 24 * 60 * 60 * 1000;
 
@@ -250,7 +251,7 @@ class EnhancedHoverProvider implements vscode.HoverProvider {
         if (!mdBody && !offlineOnly) {
             try {
                 mdBody = await getSectionMarkdown(baseUrl, info.url, info.anchor || '');
-                await context.globalState.update(cacheKey, { ts: now, md: mdBody });
+                await this.context.globalState.update(cacheKey, { ts: now, md: mdBody });
 
                 // Store in enhanced cache manager with 10 minute TTL
                 try {
@@ -428,12 +429,7 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
         };
         const finalProcessed = transformLinksOutsideCode(finalBody);
 
-        // Create enhanced hover UI with better formatting
-        const md = new vscode.MarkdownString();
-        md.isTrusted = true;
-        md.supportHtml = true;
-
-        // Build the enhanced hover content with title header - optimized for top alignment
+        // Create enhanced hover UI with better formatting and safe markdown handling
         let enhancedContent = '';
 
         // Add compact title with emoji - controlled by compactDisplay setting
@@ -479,7 +475,9 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
             }
         }
 
-        md.appendMarkdown(enhancedContent);
+        // Use safe markdown creation - check if content has command URIs
+        const hasCommands = enhancedContent.includes('command:pythonHover.');
+        const md = createSafeMarkdownString(enhancedContent, hasCommands);
 
         // Add subtle version info for debugging (only in dev mode)
         if (process.env.NODE_ENV === 'development') {
@@ -504,8 +502,5 @@ _Type-aware_: resolved member to a concrete type based on nearby code (best-effo
  * Create the enhanced hover provider with error handling and debouncing
  */
 export const createHoverProvider = (context: vscode.ExtensionContext): vscode.HoverProvider => {
-    // Store context globally so the hover provider can access it
-    (globalThis as any).__pythonHoverContext = context;
-
-    return new EnhancedHoverProvider();
+    return new EnhancedHoverProvider(context);
 };

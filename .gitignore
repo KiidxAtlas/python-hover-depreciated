@@ -2,3 +2,6 @@ out
 node_modules
 *.vsix
 .vscode/.history
+.venv/
+.eslintrc.*
+test.py

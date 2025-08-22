@@ -1,5 +1,25 @@
 # Change Log
 
+## [2.4.6] - 2025-08-21
+
+### 🔧 **Critical Bug Fixes & Security**
+
+#### 🐛 **Fixed Issues**
+- **Command URI Mismatches**: Fixed broken action links in hover tooltips
+- **Global Context Anti-pattern**: Replaced unsafe global access with proper dependency injection
+- **Cache Key Management**: Centralized cache operations for better performance
+- **Duplicate Registrations**: Cleaned up hover provider registration conflicts
+
+#### 🛡️ **Security Enhancements**
+- **Command URI Validation**: Added whitelist-based command sanitization
+- **Safe Markdown Handling**: Conditional trust settings with XSS prevention
+- **Input Sanitization**: Enhanced validation for all external inputs
+
+#### 📦 **Infrastructure**
+- **ESLint Integration**: Added TypeScript linting with automated fixes
+- **CI/CD Pipeline**: GitHub Actions for automated testing and quality checks
+- **Code Cleanup**: Removed deprecated files and optimized project structure
+
 ## [2.4.5] - 2025-08-21
 
 ### 🛡️ **Stability & Security Update**

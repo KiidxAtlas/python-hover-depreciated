@@ -376,7 +376,7 @@ export function htmlToMarkdown(html: string, baseUrl: string): string {
                 }
             }
             // No prose split; still format grammar nicely by splitting multiple productions
-            let grammarOnly = line.replace(/\s+([A-Za-z_][A-Za-z0-9_]*\s*::=)/g, '\n$1');
+            const grammarOnly = line.replace(/\s+([A-Za-z_][A-Za-z0-9_]*\s*::=)/g, '\n$1');
             // Limit lines/chars to avoid overwhelming the hover (configurable)
             const lines = grammarOnly.split('\n').slice(0, limitLines);
             let joined = lines.join('\n');

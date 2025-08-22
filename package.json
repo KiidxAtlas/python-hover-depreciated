@@ -3,7 +3,7 @@
     "icon": "media/icon.png",
     "displayName": "🐍 Python Hover - Enhanced Documentation",
     "description": "Instant Python documentation with 300+ constructs, smart context detection, and practical examples. Perfect for learning and quick reference.",
-    "version": "2.4.5",
+    "version": "2.4.6",
     "publisher": "KiidxAtlas",
     "license": "MIT",
     "repository": {
@@ -403,14 +403,21 @@
         "vscode:prepublish": "npm run compile -- --production",
         "package": "vsce package",
         "publish": "vsce publish",
-        "test": "npm run compile-tsc && node ./out/test/runTest.js"
+        "test": "npm run compile-tsc && node ./out/test/runTest.js",
+        "lint": "eslint src/**/*.ts --fix",
+        "lint:check": "eslint src/**/*.ts",
+        "pretest": "npm run compile-tsc && npm run lint:check"
     },
     "devDependencies": {
+        "@eslint/js": "^9.33.0",
         "@types/mocha": "^10.0.10",
         "@types/node": "^20.5.1",
         "@types/vscode": "^1.90.0",
+        "@typescript-eslint/eslint-plugin": "^8.40.0",
+        "@typescript-eslint/parser": "^8.40.0",
         "@vscode/vsce": "^3.6.0",
         "esbuild": "^0.25.9",
+        "eslint": "^9.33.0",
         "glob": "^11.0.3",
         "mocha": "^11.7.1",
         "typescript": "^5.5.0"
@@ -421,6 +428,10 @@
         "node-fetch": "^2.7.0"
     },
     "bundledDependencies": [
+        "cheerio",
+        "node-fetch"
+    ],
+    "bundleDependencies": [
         "cheerio",
         "node-fetch"
     ]

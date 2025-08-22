@@ -57,20 +57,15 @@ export function activate(context: vscode.ExtensionContext) {
     // PRIORITY: Register hover provider FIRST for higher priority over other extensions
     const provider: vscode.HoverProvider = createHoverProvider(context);
 
-    // Register with multiple selectors for maximum coverage and priority
-    const documentSelectors = [
-        { language: "python", scheme: "file", pattern: "**/*.py" },
-        { language: "python", scheme: "file", pattern: "**/*.pyw" },
-        { language: "python", scheme: "untitled" },
+    // Register with a single comprehensive selector for maximum coverage and priority
+    const documentSelector: vscode.DocumentSelector = [
         { language: "python", scheme: "file" },
-        { language: "python" } // fallback
+        { language: "python", scheme: "untitled" }
     ];
 
-    for (const selector of documentSelectors) {
-        context.subscriptions.push(
-            vscode.languages.registerHoverProvider(selector, provider)
-        );
-    }
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(documentSelector, provider)
+    );
 
     // Register commands
     const debugExtraction = vscode.commands.registerCommand('pythonHover.debugExtraction', async () => {
@@ -232,15 +227,11 @@ export function activate(context: vscode.ExtensionContext) {
         await editor.insertSnippet(snippet, editor.selection.active);
     });
     const clearCacheCommand = vscode.commands.registerCommand('pythonHover.clearCache', async () => {
+        const { CACHE_PREFIXES, isCacheKey } = await import('./utils/cacheKeys');
         const allKeys = context.globalState.keys();
-        // Clear all cache types: pyDocs:, hot:, sec:, and any others
-        const cacheKeys = allKeys.filter(key =>
-            key.startsWith('pyDocs:') ||
-            key.startsWith('hot:') ||
-            key.startsWith('sec:') ||
-            key.includes('cache') ||
-            key.includes('Cache')
-        );
+
+        // Clear all cache types using centralized cache key detection
+        const cacheKeys = allKeys.filter(key => isCacheKey(key));
 
         let clearedCount = 0;
         for (const key of cacheKeys) {
@@ -296,21 +287,24 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        // Clear cache for this specific keyword - update all cache types
+        // Clear cache for this specific keyword using centralized cache key management
         const { pythonVersion } = getConfig();
-        const ver = pythonVersion;
+        const { createDocsCacheKey, createHotCacheKey, createSectionCacheKey, getCacheKeysByPrefix } = await import('./utils/cacheKeys');
         const allKeys = context.globalState.keys();
 
         // Clear all related cache entries for this word
-        const relatedKeys = allKeys.filter(key =>
-            (key.includes(info.url) && (info.anchor ? key.includes(info.anchor) : true)) ||
-            key.includes(`pyDocs:v8:${ver}:${info.url}#${info.anchor || ''}`) ||
-            key.includes(`hot:v8:${ver}:${info.url}#${info.anchor || ''}`) ||
-            key.includes(`sec:v8:`)
+        const docsCacheKey = createDocsCacheKey(pythonVersion, info.url, info.anchor);
+        const hotCacheKey = createHotCacheKey(pythonVersion, info.url, info.anchor);
+
+        // Find all section cache keys that might match
+        const sectionKeys = getCacheKeysByPrefix(allKeys, 'sec:').filter(key =>
+            key.includes(info.url) && (info.anchor ? key.includes(info.anchor) : true)
         );
 
+        const keysToDelete = [docsCacheKey, hotCacheKey, ...sectionKeys];
+
         let clearedCount = 0;
-        for (const key of relatedKeys) {
+        for (const key of keysToDelete) {
             await context.globalState.update(key, undefined);
             clearedCount++;
         }
@@ -319,8 +313,8 @@ export function activate(context: vscode.ExtensionContext) {
         try {
             const { CacheManager } = await import('./utils/cache');
             const cacheManager = CacheManager.getInstance();
-            // Note: CacheManager doesn't have a specific delete method for single items
-            // so we'll let the session cache invalidation handle it
+            // Clear the specific hot cache entry
+            cacheManager.delete(hotCacheKey);
         } catch { }
 
         try {
@@ -333,8 +327,9 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     const showStatisticsCommand = vscode.commands.registerCommand('pythonHover.showStatistics', async () => {
+        const { CACHE_PREFIXES, getCacheKeysByPrefix } = await import('./utils/cacheKeys');
         const allKeys = context.globalState.keys();
-        const cacheKeys = allKeys.filter(key => key.startsWith('pyDocs:'));
+        const cacheKeys = getCacheKeysByPrefix(allKeys, CACHE_PREFIXES.DOCS);
 
         let totalSize = 0;
         let expiredCount = 0;
@@ -342,23 +337,55 @@ export function activate(context: vscode.ExtensionContext) {
         const { cacheDays } = getConfig();
         const freshMs = cacheDays * 24 * 60 * 60 * 1000;
 
+        const entriesByType: Record<string, number> = {};
+        let oldestEntry: Date | undefined;
+        let newestEntry: Date | undefined;
+
         for (const key of cacheKeys) {
             const cached = context.globalState.get<{ ts: number; md: string }>(key);
             if (cached) {
                 totalSize += cached.md.length;
+
+                const entryDate = new Date(cached.ts);
+                if (!oldestEntry || entryDate < oldestEntry) {
+                    oldestEntry = entryDate;
+                }
+                if (!newestEntry || entryDate > newestEntry) {
+                    newestEntry = entryDate;
+                }
+
                 if (now - cached.ts > freshMs) {
                     expiredCount++;
                 }
+
+                // Count by cache type
+                const prefix = Object.entries(CACHE_PREFIXES).find(([, p]) => key.startsWith(p))?.[0] || 'UNKNOWN';
+                entriesByType[prefix] = (entriesByType[prefix] || 0) + 1;
             }
         }
+
+        // Get in-memory cache stats
+        let memoryStats = '';
+        try {
+            const { CacheManager } = await import('./utils/cache');
+            const cacheManager = CacheManager.getInstance();
+            const stats = cacheManager.getStats();
+            const memStats = cacheManager.getMemoryStats();
+            memoryStats = `\n• In-memory entries: ${stats.size} (${stats.hitRate * 100}% hit rate)`;
+            memoryStats += `\n• Memory usage: ${(memStats.currentSize / 1024 / 1024).toFixed(1)}MB / ${(memStats.maxSize / 1024 / 1024).toFixed(1)}MB`;
+        } catch { }
 
         const message = [
             `📊 Python Hover Cache Statistics:`,
             `• Total entries: ${cacheKeys.length}`,
             `• Expired entries: ${expiredCount}`,
             `• Total cache size: ${(totalSize / 1024).toFixed(1)} KB`,
-            `• Cache duration: ${cacheDays} days`
-        ].join('\n');
+            `• Cache duration: ${cacheDays} days`,
+            memoryStats,
+            oldestEntry ? `• Oldest entry: ${oldestEntry.toLocaleDateString()}` : '',
+            newestEntry ? `• Newest entry: ${newestEntry.toLocaleDateString()}` : '',
+            Object.entries(entriesByType).length > 0 ? `• By type: ${Object.entries(entriesByType).map(([k, v]) => `${k}:${v}`).join(', ')}` : ''
+        ].filter(Boolean).join('\n');
 
         vscode.window.showInformationMessage(message);
     });

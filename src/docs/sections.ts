@@ -83,7 +83,7 @@ function summarizeMarkdown(md: string, opts: { summaryOnly: boolean; includeDocE
         }
         // List items
         if (!opts.summaryOnly && opts.includeLists && /^\s*[-*]\s+/.test(lines[i])) {
-            let start = i;
+            const start = i;
             while (i < lines.length && /^\s*[-*]\s+/.test(lines[i]) && addedListItems < 8) {
                 out.push(lines[i].trim());
                 addedListItems++;

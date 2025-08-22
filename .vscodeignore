@@ -45,3 +45,6 @@ webpack.config.js
 test/**
 **/*.test.*
 **/*.spec.*
+
+# .venv
+.venv/

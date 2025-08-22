@@ -1,6 +1,58 @@
 /**
  * Security utilities for input validation and sanitization
  */
+import * as vscode from 'vscode';
+
+/**
+ * Sanitizes command URIs to only allow whitelisted commands
+ */
+export function sanitizeCommandUri(uri: string): string {
+    const allowedCommands = [
+        'pythonHover.openDocsInEditorWithUrl',
+        'pythonHover.copyDocsUrl',
+        'pythonHover.copyHoverText',
+        'pythonHover.insertClassTemplate',
+        'pythonHover.insertTryTemplate',
+        'pythonHover.insertIfTemplate'
+    ];
+
+    try {
+        const match = uri.match(/^command:([^?]+)/);
+        if (match) {
+            const commandId = match[1];
+            if (!allowedCommands.includes(commandId)) {
+                console.warn(`Blocked potentially unsafe command: ${commandId}`);
+                return '#'; // Safe fallback
+            }
+        }
+        return uri;
+    } catch {
+        return '#'; // Safe fallback on any parsing error
+    }
+}
+
+/**
+ * Creates a safe MarkdownString with appropriate trust settings
+ */
+export function createSafeMarkdownString(content: string, hasCommands: boolean = false): vscode.MarkdownString {
+    const md = new vscode.MarkdownString();
+
+    // Only mark as trusted if we have vetted command URIs
+    md.isTrusted = hasCommands;
+    md.supportHtml = false; // Disable HTML to prevent XSS
+
+    // Sanitize command URIs in the content
+    const sanitizedContent = content.replace(
+        /command:([^?)\s]+)(\?[^)\s]*)?/g,
+        (match, commandId, args) => {
+            const fullUri = `command:${commandId}${args || ''}`;
+            return sanitizeCommandUri(fullUri);
+        }
+    );
+
+    md.appendMarkdown(sanitizedContent);
+    return md;
+}
 
 /**
  * Sanitizes user input to prevent ReDoS (Regular Expression Denial of Service) attacks

@@ -2,7 +2,7 @@
 export function smartTruncateMarkdown(text: string, limit: number): string {
     if (limit <= 0 || text.length <= limit) return text;
     let cut = limit;
-    let candidate = text.slice(0, cut);
+    const candidate = text.slice(0, cut);
     const window = 200;
     const searchStart = Math.max(0, cut - window);
     const tail = candidate.slice(searchStart);

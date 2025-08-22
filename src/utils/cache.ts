@@ -306,6 +306,17 @@ export class CacheManager {
     }
 
     /**
+     * Delete a specific cache entry
+     */
+    delete(key: string): boolean {
+        const wasDeleted = this.cache.delete(key);
+        if (wasDeleted) {
+            this.deleteFromDisk(key);
+        }
+        return wasDeleted;
+    }
+
+    /**
      * Set maximum cache size
      */
     setMaxSize(size: number): void {

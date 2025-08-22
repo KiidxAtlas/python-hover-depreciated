@@ -3,6 +3,8 @@
 > **Instant Python documentation at your fingertips**
 > Get comprehensive examples, type hints, and practical code snippets without leaving your editor.
 
+![Python Hover Demo](media/demo.gif)
+
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/KiidxAtlas.python-hover)](https://marketplace.visualstudio.com/items?itemName=KiidxAtlas.python-hover)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/KiidxAtlas.python-hover)](https://marketplace.visualstudio.com/items?itemName=KiidxAtlas.python-hover)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/KiidxAtlas.python-hover)](https://marketplace.visualstudio.com/items?itemName=KiidxAtlas.python-hover)

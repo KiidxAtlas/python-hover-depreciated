@@ -73,5 +73,7 @@ def test_module_usage():
     print(f"Random number: {random_int}")
 
 
+
+
 if __name__ == "__main__":
     test_module_usage()

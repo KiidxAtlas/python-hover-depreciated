@@ -423,9 +423,5 @@
     "bundledDependencies": [
         "cheerio",
         "node-fetch"
-    ],
-    "bundleDependencies": [
-        "cheerio",
-        "node-fetch"
     ]
 }

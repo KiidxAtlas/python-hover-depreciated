@@ -123,7 +123,7 @@ npm test
 The new test suite validates:
 - ✅ Configuration validation handles invalid inputs correctly
 - ✅ Memory management respects limits
-- ✅ Cache handles large entries gracefully  
+- ✅ Cache handles large entries gracefully
 - ✅ Default values are sensible and secure
 
 ## 📊 **Impact**

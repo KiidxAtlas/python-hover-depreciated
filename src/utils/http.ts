@@ -34,7 +34,7 @@ export class HttpClient {
             retryOnTimeout: true,
             retryOnConnectionError: true
         };
-        
+
         // Initialize rate limiter: 100 requests per minute
         this.rateLimiter = new RateLimiter(100, 60000);
     }
@@ -113,13 +113,13 @@ export class HttpClient {
         if (!isValidUrl(url)) {
             throw new Error(`Invalid or unsafe URL: ${url}`);
         }
-        
+
         // Rate limiting
         const urlHost = new URL(url).hostname;
         if (!this.rateLimiter.isAllowed(urlHost)) {
             throw new Error(`Rate limit exceeded for ${urlHost}`);
         }
-        
+
         const opts = { ...this.defaultOptions, ...retryOptions };
         let lastError: Error | null = null;
 

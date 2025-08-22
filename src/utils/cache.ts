@@ -175,7 +175,7 @@ export class CacheManager {
 
         // Calculate memory size for the entry
         const entrySize = this.calculateEntrySize(entry);
-        
+
         // Check if we need to evict old entries to stay within memory limits
         this.evictIfNecessary(entrySize);
 

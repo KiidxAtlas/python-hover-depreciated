@@ -12,10 +12,10 @@ export function sanitizeInput(input: string, maxLength: number = 1000): string {
     if (typeof input !== 'string') {
         return '';
     }
-    
+
     // Limit input length to prevent resource exhaustion
     const truncated = input.slice(0, maxLength);
-    
+
     // Remove potentially dangerous patterns that could cause ReDoS
     return truncated
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
@@ -30,18 +30,18 @@ export function sanitizeInput(input: string, maxLength: number = 1000): string {
 export function isValidUrl(url: string): boolean {
     try {
         const parsedUrl = new URL(url);
-        
+
         // Only allow HTTPS for security
         if (parsedUrl.protocol !== 'https:') {
             return false;
         }
-        
+
         // Only allow specific trusted domains for Python documentation
         const allowedHosts = [
             'docs.python.org',
             'www.python.org'
         ];
-        
+
         return allowedHosts.includes(parsedUrl.hostname);
     } catch (error) {
         return false;
@@ -72,19 +72,19 @@ export function createSafeRegex(pattern: string, flags?: string, timeoutMs: numb
             console.warn('Suspicious regex pattern detected:', pattern);
             return null;
         }
-        
+
         const regex = new RegExp(pattern, flags);
-        
+
         // Test the regex with a simple input to check for excessive backtracking
         const testStart = Date.now();
         regex.test('test');
         const testTime = Date.now() - testStart;
-        
+
         if (testTime > timeoutMs) {
             console.warn('Regex pattern may cause performance issues:', pattern);
             return null;
         }
-        
+
         return regex;
     } catch (error) {
         console.error('Invalid regex pattern:', pattern, error);
@@ -108,7 +108,7 @@ function containsSuspiciousPatterns(pattern: string): boolean {
         /\*\*/,           // Double asterisk (catastrophic backtracking)
         /\(\?\!\$\)/,     // Negative lookahead at end
     ];
-    
+
     return suspiciousPatterns.some(pattern => pattern.test(pattern.toString()));
 }
 
@@ -133,17 +133,17 @@ export class RateLimiter {
     isAllowed(key: string): boolean {
         const now = Date.now();
         const requests = this.requests.get(key) || [];
-        
+
         // Remove expired requests
         const validRequests = requests.filter(time => now - time < this.windowMs);
-        
+
         if (validRequests.length >= this.maxRequests) {
             return false;
         }
-        
+
         validRequests.push(now);
         this.requests.set(key, validRequests);
-        
+
         return true;
     }
 

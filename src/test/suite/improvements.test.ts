@@ -1,5 +1,4 @@
 import * as assert from 'assert';
-import * as vscode from 'vscode';
 import { validateConfig } from '../../config';
 import { CacheManager } from '../../utils/cache';
 
@@ -52,13 +51,13 @@ suite('Improvements Test Suite', () => {
 
     test('Cache manager should handle memory limits', () => {
         const cacheManager = CacheManager.getInstance();
-        
+
         // Test memory stats are available
         const memoryStats = cacheManager.getMemoryStats();
         assert.strictEqual(typeof memoryStats.currentSize, 'number');
         assert.strictEqual(typeof memoryStats.maxSize, 'number');
         assert.strictEqual(typeof memoryStats.utilization, 'number');
-        
+
         // Utilization should be between 0 and 1
         assert.strictEqual(memoryStats.utilization >= 0, true);
         assert.strictEqual(memoryStats.utilization <= 1, true);
@@ -67,17 +66,17 @@ suite('Improvements Test Suite', () => {
     test('Cache manager should handle large entries gracefully', () => {
         const cacheManager = CacheManager.getInstance();
         const initialStats = cacheManager.getMemoryStats();
-        
+
         // Try to cache a large object
         const largeObject = { data: 'x'.repeat(10000) };
-        
+
         try {
             cacheManager.set('large-test-key', largeObject, 60000);
-            
+
             // Verify the entry was cached
             const retrieved = cacheManager.get('large-test-key');
             assert.deepStrictEqual(retrieved, largeObject);
-            
+
             // Test passed - large entry handled correctly
         } catch (error) {
             // Should not throw errors for large entries

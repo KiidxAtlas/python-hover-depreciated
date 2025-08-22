@@ -60,23 +60,23 @@ export function validateConfig(config: Partial<HoverConfig>): HoverConfig {
     const grammarMaxChars = Math.max(100, Math.min(5000, config.grammarMaxChars ?? 600));
     const httpTimeoutMs = Math.max(1000, Math.min(60000, config.httpTimeoutMs ?? 6000));
     const httpRetries = Math.max(0, Math.min(10, config.httpRetries ?? 1));
-    
+
     // Validate Python version format
     let pythonVersion = config.pythonVersion ?? '3';
     if (!/^\d+(?:\.\d+)?$/.test(pythonVersion.trim())) {
         pythonVersion = '3.12'; // Default to current stable version
     }
-    
+
     // Validate locale format
     let docsLocale = config.docsLocale ?? 'en';
     if (!/^[a-z]{2}(?:_[A-Z]{2})?$/.test(docsLocale.trim())) {
         docsLocale = 'en';
     }
-    
+
     // Validate openTarget enum
     const validTargets = ['auto', 'editor', 'external'] as const;
     const openTarget = validTargets.includes(config.openTarget as any) ? config.openTarget! : 'auto';
-    
+
     return {
         useDomParser: config.useDomParser ?? true,
         openTarget,

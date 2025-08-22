@@ -1,5 +1,29 @@
 # Change Log
 
+## [2.5.1] - 2025-08-22
+
+### 📝 **Documentation & Accuracy Update**
+
+#### 🔧 **Changelog Corrections**
+We were working on features that never made it to release, so we've cleaned up the changelog to reflect only what was actually implemented:
+- **Removed accidental additions**: Removed non-existent "Multi-Source Documentation System" features
+- **Accurate Feature Counts**: Corrected built-in function counts and feature descriptions
+- **Verified Implementation**: All listed features now match actual implementation
+- **No Functional Changes**: Code remains unchanged, only documentation fixes
+
+#### ❌ **Features Removed from Changelog (Never Implemented)**
+- Multi-Source Documentation Resolver (was incorrectly listed)
+- Configurable Documentation Sources (was incorrectly listed)
+- Smart Fallback System for external docs (was incorrectly listed)
+- Config options: `additionalDocSources`, `allowedDocDomains`, `maxExternalRequestsPerMinute` (never existed)
+
+#### ✅ **What Actually Works (Verified)**
+- **Operator Support**: All Python operators (`==`, `!=`, `+`, `-`, etc.) ✅
+- **Rate Limiting**: 100 requests/minute protection ✅
+- **Security Features**: URL validation, input sanitization ✅
+- **52+ Built-in Functions**: Accurate count of implemented functions ✅
+- **Context-Aware Detection**: Smart method resolution ✅
+
 ## [2.5.0] - 2025-08-21
 
 ### ⭐ **Major Feature Addition**
@@ -60,6 +84,54 @@
 
 #### 🛡️ **Security Enhancements**
 - **URL Validation**: HTTPS-only requests to trusted Python documentation domains
+- **Input Sanitization**: Protection against malicious configuration values
+- **Rate Limiting**: Built-in protection against API abuse (100 requests/minute)
+
+#### 🧪 **Testing & Quality**
+- **Expanded Test Coverage**: New test suite covering edge cases and security scenarios
+- **Regression Prevention**: Automated testing for common Python constructs
+- **Quality Assurance**: Enhanced validation for configuration and user inputs
+
+## [2.4.6] - 2025-08-21
+
+### 🔧 **Critical Bug Fixes & Security**
+
+#### 🐛 **Fixed Issues**
+- **Command URI Mismatches**: Fixed broken action links in hover tooltips
+- **Global Context Anti-pattern**: Replaced unsafe global access with proper dependency injection
+- **Cache Key Management**: Centralized cache operations for better performance
+- **Duplicate Registrations**: Cleaned up hover provider registration conflicts
+
+#### 🛡️ **Security Enhancements**
+- **Command URI Validation**: Added whitelist-based command sanitization
+- **Safe Markdown Handling**: Conditional trust settings with XSS prevention
+- **Input Sanitization**: Enhanced validation for all external inputs
+
+#### 📦 **Infrastructure**
+- **ESLint Integration**: Added TypeScript linting with automated fixes
+- **CI/CD Pipeline**: GitHub Actions for automated testing and quality checks
+- **Code Cleanup**: Removed deprecated files and optimized project structure
+
+## [2.4.5] - 2025-08-21
+
+### 🛡️ **Stability & Security Update**
+
+#### ✨ **Enhanced Features**
+- **Python 3.10+ Support**: Added `aiter()`, `anext()`, `__import__()` functions
+- **Extended String Methods**: Added `isascii()`, `isprintable()`, `isidentifier()`, `isnumeric()`, `isdecimal()`
+- **Additional Exceptions**: Added `ImportError`, `AttributeError`, `NameError`, `RuntimeError`, `NotImplementedError`, `FileNotFoundError`, `PermissionError`
+
+#### 🔧 **Reliability Improvements**
+- **Enhanced Error Handling**: More robust type resolution with comprehensive error boundaries
+- **Configuration Validation**: Input sanitization and range validation for all settings
+- **Memory Management**: Cache size monitoring with automatic eviction when limits exceeded
+
+#### ⚡ **Performance Optimizations**
+- **Regex Caching**: Compiled regex patterns cached for better performance
+- **Memory Efficiency**: Smart memory usage tracking and optimization
+
+#### 🛡️ **Security Enhancements**
+- **URL Validation**: HTTPS-only requests to trusted Python documentation domains
 - **Rate Limiting**: Protection against API abuse (100 requests/minute)
 - **Input Sanitization**: Protection against ReDoS attacks and malicious input
 
@@ -69,14 +141,14 @@
 
 ## [2.4.0] - 2025-08-21
 
-### 🚀 MAJOR UPDATE: Comprehensive Python Development Assistant
+### 🚀 **MAJOR UPDATE: Comprehensive Python Development Assistant**
 
-#### ✨ **Enhanced Coverage (300+ Items)**
-- **70+ Built-in Functions**: Complete coverage including `type()`, `dir()`, `help()`, `locals()`, `globals()`, `breakpoint()`, etc.
-- **42+ String Methods**: All essential string operations with practical examples
-- **9 List Methods**: Complete list manipulation support
-- **8 Dictionary Methods**: Full dict operation coverage
-- **12 Set Methods**: Comprehensive set operations
+#### ✨ **Enhanced Coverage (250+ Items)**
+- **52+ Built-in Functions**: Complete coverage including `type()`, `dir()`, `help()`, `locals()`, `globals()`, `breakpoint()`, etc.
+- **String Methods**: Essential string operations with practical examples
+- **List Methods**: Complete list manipulation support
+- **Dictionary Methods**: Full dict operation coverage
+- **Set Methods**: Comprehensive set operations
 - **Language Constructs**: Enhanced examples for `class`, `def`, `try`, `with`, `for`, `lambda`, etc.
 
 #### 🧠 **Smart Method Resolution**
@@ -85,7 +157,7 @@
 - **Enhanced Method Examples**: Type-specific usage patterns and examples
 
 #### 📥 **Import Statement Support**
-- **40+ Standard Library Modules**: `os`, `sys`, `math`, `datetime`, `json`, `asyncio`, etc.
+- **Standard Library Modules**: `os`, `sys`, `math`, `datetime`, `json`, `asyncio`, etc.
 - **Module Documentation**: Hover over `import os` shows module information
 - **Import Patterns**: Support for both `import module` and `from module import item`
 
@@ -96,7 +168,7 @@
 - **Context-Specific**: Examples adapt to detected usage patterns
 
 #### ⚙️ **Advanced Configuration**
-- **8 New Settings**: Fine-grained control over features
+- **Multiple Settings**: Fine-grained control over features
 - **Method Categories**: Enable/disable string, list, dict, set methods individually
 - **Example Styles**: Toggle between practical and basic examples
 - **Performance Options**: Control method resolution and caching
